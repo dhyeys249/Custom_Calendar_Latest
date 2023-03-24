@@ -753,26 +753,43 @@ export class Event extends React.Component<IEventProps, IEventState> {
     // );
     let ArrayofAttendees = [];
 
-    if (Attendees.length > 0) {
-      Attendees.map(async (data) => {
-        await this.spService
-          .getnames(data)
-          .then((names) => {
-            console.log(names);
-            ArrayofAttendees.push({
-              emailAddress: {
-                address: names.Email,
-                name: names.Title,
-              },
-              type: "required",
-            });
-          })
-          .catch((err) => {
-            console.log(err);
-          });
-      });
-      console.log(ArrayofAttendees);
+    for (const attendee of Attendees) {
+      try {
+        const userData = await this.spService.getnames(attendee);
+        console.log("User Name: " + userData.Title);
+        console.log("User Email: " + userData.Email);
+        ArrayofAttendees.push({
+          emailAddress: {
+            address: userData.Email,
+            name: userData.Title,
+          },
+          type: "required",
+        });
+      } catch (err) {
+        console.log(err);
+      }
     }
+
+    // if (Attendees.length > 0) {
+    //   Attendees.map(async (data) => {
+    //     await this.spService
+    //       .getnames(data)
+    //       .then((names) => {
+    //         console.log(names);
+    //         ArrayofAttendees.push({
+    //           emailAddress: {
+    //             address: names.Email,
+    //             name: names.Title,
+    //           },
+    //           type: "required",
+    //         });
+    //       })
+    //       .catch((err) => {
+    //         console.log(err);
+    //       });
+    //   });
+    //   console.log(ArrayofAttendees);
+    // }
 
     // let attendee = [ArrayofAttendees];
 
