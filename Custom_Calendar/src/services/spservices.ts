@@ -2,34 +2,31 @@
 // March 2019
 
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { sp, Web, PermissionKind, RegionalSettings } from '@pnp/sp';
-import { graph, } from "@pnp/graph";
-import * as $ from 'jquery';
-import { IEventData } from './IEventData';
-import * as moment from 'moment';
+import { sp, Web, PermissionKind, RegionalSettings } from "@pnp/sp";
+import { graph } from "@pnp/graph";
+import * as $ from "jquery";
+import { IEventData } from "./IEventData";
+import * as moment from "moment";
 import { SiteUser } from "@pnp/sp/src/siteusers";
-import { IUserPermissions } from './IUserPermissions';
-import parseRecurrentEvent from './parseRecurrentEvent';
+import { IUserPermissions } from "./IUserPermissions";
+import parseRecurrentEvent from "./parseRecurrentEvent";
 
 // Class Services
 export default class spservices {
-
-
   constructor(private context: WebPartContext) {
     // Setuo Context to PnPjs and MSGraph
     sp.setup({
-      spfxContext: this.context
+      spfxContext: this.context,
     });
 
     graph.setup({
-      spfxContext: this.context
+      spfxContext: this.context,
     });
     // Init
     this.onInit();
   }
   // OnInit Function
-  private async onInit() {
-  }
+  private async onInit() {}
 
   /**
    *
@@ -39,10 +36,11 @@ export default class spservices {
    */
   public async getLocalTime(date: string | Date): Promise<string> {
     try {
-      const localTime = await sp.web.regionalSettings.timeZone.utcToLocalTime(date);
+      const localTime = await sp.web.regionalSettings.timeZone.utcToLocalTime(
+        date
+      );
       return localTime;
-    }
-    catch (error) {
+    } catch (error) {
       return Promise.reject(error);
     }
   }
@@ -55,13 +53,23 @@ export default class spservices {
    */
   public async getUtcTime(date: string | Date): Promise<string> {
     try {
-      const utcTime = await sp.web.regionalSettings.timeZone.localTimeToUTC(date);
+      const utcTime = await sp.web.regionalSettings.timeZone.localTimeToUTC(
+        date
+      );
       return utcTime;
-    }
-    catch (error) {
+    } catch (error) {
       return Promise.reject(error);
     }
   }
+
+  public getnames = async (user) => {
+    try {
+      const names = await sp.web.getUserById(user).get();
+      return names;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
 
   /**
    *
@@ -89,17 +97,17 @@ export default class spservices {
         Category: newEvent.Category,
         EventType: newEvent.EventType,
         UID: newEvent.UID,
-        RecurrenceData: newEvent.RecurrenceData ? await this.deCodeHtmlEntities(newEvent.RecurrenceData) : "",
+        RecurrenceData: newEvent.RecurrenceData
+          ? await this.deCodeHtmlEntities(newEvent.RecurrenceData)
+          : "",
         MasterSeriesItemID: newEvent.MasterSeriesItemID,
         RecurrenceID: newEvent.RecurrenceID ? newEvent.RecurrenceID : undefined,
       });
-    }
-    catch (error) {
+    } catch (error) {
       return Promise.reject(error);
     }
     return results;
   }
-
 
   /**
    *
@@ -110,14 +118,43 @@ export default class spservices {
    * @returns {Promise<IEventData>}
    * @memberof spservices
    */
-  public async getEvent(siteUrl: string, listId: string, eventId: number): Promise<IEventData> {
+  public async getEvent(
+    siteUrl: string,
+    listId: string,
+    eventId: number
+  ): Promise<IEventData> {
     let returnEvent: IEventData = undefined;
     try {
       const web = new Web(siteUrl);
 
       //"Title","fRecurrence", "fAllDayEvent","EventDate", "EndDate", "Description","ID", "Location","Geolocation","ParticipantsPickerId"
-      const event = await web.lists.getById(listId).items.usingCaching().getById(eventId)
-        .select("RecurrenceID", "MasterSeriesItemID", "Id", "ID", "ParticipantsPickerId", "EventType", "Title", "Description", "EventDate", "EndDate", "Location", "Author/SipAddress", "Author/Title", "Geolocation", "fAllDayEvent", "fRecurrence", "RecurrenceData", "RecurrenceData", "Duration", "Category", "UID")
+      const event = await web.lists
+        .getById(listId)
+        .items.usingCaching()
+        .getById(eventId)
+        .select(
+          "RecurrenceID",
+          "MasterSeriesItemID",
+          "Id",
+          "ID",
+          "ParticipantsPickerId",
+          "EventType",
+          "Title",
+          "Description",
+          "EventDate",
+          "EndDate",
+          "Location",
+          "Author/SipAddress",
+          "Author/Title",
+          "Geolocation",
+          "fAllDayEvent",
+          "fRecurrence",
+          "RecurrenceData",
+          "RecurrenceData",
+          "Duration",
+          "Category",
+          "UID"
+        )
         .expand("Author")
         .get();
 
@@ -129,28 +166,32 @@ export default class spservices {
         ID: event.ID,
         EventType: event.EventType,
         title: await this.deCodeHtmlEntities(event.Title),
-        Description: event.Description ? event.Description : '',
+        Description: event.Description ? event.Description : "",
         EventDate: new Date(eventDate),
         EndDate: new Date(endDate),
         location: event.Location,
         ownerEmail: event.Author.SipAddress,
         ownerPhoto: "",
-        ownerInitial: '',
-        color: '',
+        ownerInitial: "",
+        color: "",
         ownerName: event.Author.Title,
         attendes: event.ParticipantsPickerId,
         fAllDayEvent: event.fAllDayEvent,
-        geolocation: { Longitude: event.Geolocation ? event.Geolocation.Longitude : 0, Latitude: event.Geolocation ? event.Geolocation.Latitude : 0 },
+        geolocation: {
+          Longitude: event.Geolocation ? event.Geolocation.Longitude : 0,
+          Latitude: event.Geolocation ? event.Geolocation.Latitude : 0,
+        },
         Category: event.Category,
         Duration: event.Duration,
         UID: event.UID,
-        RecurrenceData: event.RecurrenceData ? await this.deCodeHtmlEntities(event.RecurrenceData) : "",
+        RecurrenceData: event.RecurrenceData
+          ? await this.deCodeHtmlEntities(event.RecurrenceData)
+          : "",
         fRecurrence: event.fRecurrence,
         RecurrenceID: event.RecurrenceID,
         MasterSeriesItemID: event.MasterSeriesItemID,
       };
-    } 
-    catch (error) {
+    } catch (error) {
       return Promise.reject(error);
     }
     return returnEvent;
@@ -164,11 +205,16 @@ export default class spservices {
    * @returns
    * @memberof spservices
    */
-  public async updateEvent(updateEvent: IEventData, siteUrl: string, listId: string) {
+  public async updateEvent(
+    updateEvent: IEventData,
+    siteUrl: string,
+    listId: string
+  ) {
     let results = null;
     try {
       // delete all recursive extentions before update recurrence event
-      if (updateEvent.EventType.toString() == "1") await this.deleteRecurrenceExceptions(updateEvent, siteUrl, listId);
+      if (updateEvent.EventType.toString() == "1")
+        await this.deleteRecurrenceExceptions(updateEvent, siteUrl, listId);
 
       const web = new Web(siteUrl);
       const eventDate = await this.getUtcTime(updateEvent.EventDate);
@@ -186,7 +232,9 @@ export default class spservices {
         fAllDayEvent: updateEvent.fAllDayEvent,
         fRecurrence: updateEvent.fRecurrence,
         Category: updateEvent.Category,
-        RecurrenceData: updateEvent.RecurrenceData ? await this.deCodeHtmlEntities(updateEvent.RecurrenceData) : "",
+        RecurrenceData: updateEvent.RecurrenceData
+          ? await this.deCodeHtmlEntities(updateEvent.RecurrenceData)
+          : "",
         EventType: updateEvent.EventType,
       };
 
@@ -197,25 +245,37 @@ export default class spservices {
         newItem.MasterSeriesItemID = updateEvent.MasterSeriesItemID;
       }
 
-      results = await web.lists.getById(listId).items.getById(updateEvent.Id).update(newItem);
-    } 
-    catch (error) {
+      results = await web.lists
+        .getById(listId)
+        .items.getById(updateEvent.Id)
+        .update(newItem);
+    } catch (error) {
       return Promise.reject(error);
     }
     return results;
   }
 
-  public async deleteRecurrenceExceptions(event: IEventData, siteUrl: string, listId: string) {
+  public async deleteRecurrenceExceptions(
+    event: IEventData,
+    siteUrl: string,
+    listId: string
+  ) {
     let results = null;
     try {
       const web = new Web(siteUrl);
-      results = await web.lists.getById(listId).items
-        .select('Id')
-        .filter(`EventType eq '3' or EventType eq '4' and MasterSeriesItemID eq '${event.Id}' `)
+      results = await web.lists
+        .getById(listId)
+        .items.select("Id")
+        .filter(
+          `EventType eq '3' or EventType eq '4' and MasterSeriesItemID eq '${event.Id}' `
+        )
         .get();
       if (results && results.length > 0) {
         for (const recurrenceException of results) {
-          await web.lists.getById(listId).items.getById(recurrenceException.Id).delete();
+          await web.lists
+            .getById(listId)
+            .items.getById(recurrenceException.Id)
+            .delete();
         }
       }
     } catch (error) {
@@ -232,19 +292,27 @@ export default class spservices {
    * @returns
    * @memberof spservices
    */
-  public async deleteEvent(event: IEventData, siteUrl: string, listId: string, recurrenceSeriesEdited: boolean) {
+  public async deleteEvent(
+    event: IEventData,
+    siteUrl: string,
+    listId: string,
+    recurrenceSeriesEdited: boolean
+  ) {
     let results = null;
     try {
       const web = new Web(siteUrl);
       // Exception Recurrence eventtype = 4 ?  update to deleted Recurrence eventtype=3
       switch (event.EventType.toString()) {
-        case '4': // Exception Recurrence Event
-          results = await web.lists.getById(listId).items.getById(event.Id).update({
-            Title: `Deleted: ${event.title}`,
-            EventType: '3',
-          });
+        case "4": // Exception Recurrence Event
+          results = await web.lists
+            .getById(listId)
+            .items.getById(event.Id)
+            .update({
+              Title: `Deleted: ${event.title}`,
+              EventType: "3",
+            });
           break;
-        case '1': // recurrence Event
+        case "1": // recurrence Event
           // if  delete is a main recrrence delete all recurrences and main recurrence
           if (recurrenceSeriesEdited) {
             // delete execptions if exists before delete recurrence event
@@ -252,21 +320,20 @@ export default class spservices {
             await web.lists.getById(listId).items.getById(event.Id).delete();
           } else {
             //Applying the Standard funactionality of SharePoint When deleting for deleting one occurrence of recurrent event by
-           // 1) adding prefix "Deleted" to event title  2) Set RecurrenceID to event Date 3) Set MasterSeriesItemID to event ID 4)Set fRecurrence to true 5) Set event type to 3
+            // 1) adding prefix "Deleted" to event title  2) Set RecurrenceID to event Date 3) Set MasterSeriesItemID to event ID 4)Set fRecurrence to true 5) Set event type to 3
             event.title = `Deleted: ${event.title}`;
             event.RecurrenceID = event.EventDate;
             event.MasterSeriesItemID = event.ID.toString();
             event.fRecurrence = true;
-            event.EventType = '3';
+            event.EventType = "3";
             await this.addEvent(event, siteUrl, listId);
           }
 
           break;
-        case '0': // normal Event
+        case "0": // normal Event
           await web.lists.getById(listId).items.getById(event.Id).delete();
           break;
       }
-
     } catch (error) {
       return Promise.reject(error);
     }
@@ -304,7 +371,10 @@ export default class spservices {
    * @returns {Promise<SiteUser>}
    * @memberof spservices
    */
-  public async getUserByLoginName(loginName: string, siteUrl: string): Promise<SiteUser> {
+  public async getUserByLoginName(
+    loginName: string,
+    siteUrl: string
+  ): Promise<SiteUser> {
     let results: SiteUser = null;
 
     if (!loginName && !siteUrl) {
@@ -344,7 +414,10 @@ export default class spservices {
    * @returns {Promise<IUserPermissions>}
    * @memberof spservices
    */
-  public async getUserPermissions(siteUrl: string, listId: string): Promise<IUserPermissions> {
+  public async getUserPermissions(
+    siteUrl: string,
+    listId: string
+  ): Promise<IUserPermissions> {
     let hasPermissionAdd: boolean = false;
     let hasPermissionEdit: boolean = false;
     let hasPermissionDelete: boolean = false;
@@ -352,14 +425,31 @@ export default class spservices {
     let userPermissions: IUserPermissions = undefined;
     try {
       const web = new Web(siteUrl);
-      const userEffectivePermissions = await web.lists.getById(listId).effectiveBasePermissions.get();
+      const userEffectivePermissions = await web.lists
+        .getById(listId)
+        .effectiveBasePermissions.get();
       // ...
-      hasPermissionAdd = sp.web.lists.getById(listId).hasPermissions(userEffectivePermissions, PermissionKind.AddListItems);
-      hasPermissionDelete = sp.web.lists.getById(listId).hasPermissions(userEffectivePermissions, PermissionKind.DeleteListItems);
-      hasPermissionEdit = sp.web.lists.getById(listId).hasPermissions(userEffectivePermissions, PermissionKind.EditListItems);
-      hasPermissionView = sp.web.lists.getById(listId).hasPermissions(userEffectivePermissions, PermissionKind.ViewListItems);
-      userPermissions = { hasPermissionAdd: hasPermissionAdd, hasPermissionEdit: hasPermissionEdit, hasPermissionDelete: hasPermissionDelete, hasPermissionView: hasPermissionView };
-
+      hasPermissionAdd = sp.web.lists
+        .getById(listId)
+        .hasPermissions(userEffectivePermissions, PermissionKind.AddListItems);
+      hasPermissionDelete = sp.web.lists
+        .getById(listId)
+        .hasPermissions(
+          userEffectivePermissions,
+          PermissionKind.DeleteListItems
+        );
+      hasPermissionEdit = sp.web.lists
+        .getById(listId)
+        .hasPermissions(userEffectivePermissions, PermissionKind.EditListItems);
+      hasPermissionView = sp.web.lists
+        .getById(listId)
+        .hasPermissions(userEffectivePermissions, PermissionKind.ViewListItems);
+      userPermissions = {
+        hasPermissionAdd: hasPermissionAdd,
+        hasPermissionEdit: hasPermissionEdit,
+        hasPermissionDelete: hasPermissionDelete,
+        hasPermissionView: hasPermissionView,
+      };
     } catch (error) {
       return Promise.reject(error);
     }
@@ -372,7 +462,6 @@ export default class spservices {
    * @memberof spservices
    */
   public async getSiteLists(siteUrl: string) {
-
     let results: any[] = [];
 
     if (!siteUrl) {
@@ -381,8 +470,10 @@ export default class spservices {
 
     try {
       const web = new Web(siteUrl);
-      results = await web.lists.select("Title", "ID").filter('BaseTemplate eq 106').get();
-
+      results = await web.lists
+        .select("Title", "ID")
+        .filter("BaseTemplate eq 106")
+        .get();
     } catch (error) {
       return Promise.reject(error);
     }
@@ -396,8 +487,23 @@ export default class spservices {
    * @memberof spservices
    */
   public async colorGenerate() {
-
-    var hexValues = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e"];
+    var hexValues = [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+    ];
     var newColor = "#";
 
     for (var i = 0; i < 6; i++) {
@@ -409,7 +515,6 @@ export default class spservices {
     return newColor;
   }
 
-
   /**
    *
    * @param {string} siteUrl
@@ -418,20 +523,24 @@ export default class spservices {
    * @returns {Promise<{ key: string, text: string }[]>}
    * @memberof spservices
    */
-  public async getChoiceFieldOptions(siteUrl: string, listId: string, fieldInternalName: string): Promise<{ key: string, text: string }[]> {
-    let fieldOptions: { key: string, text: string }[] = [];
+  public async getChoiceFieldOptions(
+    siteUrl: string,
+    listId: string,
+    fieldInternalName: string
+  ): Promise<{ key: string; text: string }[]> {
+    let fieldOptions: { key: string; text: string }[] = [];
     try {
       const web = new Web(siteUrl);
-      const results = await web.lists.getById(listId)
-        .fields
-        .getByInternalNameOrTitle(fieldInternalName)
+      const results = await web.lists
+        .getById(listId)
+        .fields.getByInternalNameOrTitle(fieldInternalName)
         .select("Title", "InternalName", "Choices")
         .get();
       if (results && results.Choices.length > 0) {
         for (const option of results.Choices) {
           fieldOptions.push({
             key: option,
-            text: option
+            text: option,
           });
         }
       }
@@ -450,23 +559,36 @@ export default class spservices {
    * @returns {Promise< IEventData[]>}
    * @memberof spservices
    */
-  public async getEvents(siteUrl: string, listId: string, eventStartDate: Date, eventEndDate: Date): Promise<IEventData[]> {
-
+  public async getEvents(
+    siteUrl: string,
+    listId: string,
+    eventStartDate: Date,
+    eventEndDate: Date
+  ): Promise<IEventData[]> {
     let events: IEventData[] = [];
     if (!siteUrl) {
       return [];
     }
     try {
       // Get Category Field Choices
-      const categoryDropdownOption = await this.getChoiceFieldOptions(siteUrl, listId, 'Category');
-      let categoryColor: { category: string, color: string }[] = [];
+      const categoryDropdownOption = await this.getChoiceFieldOptions(
+        siteUrl,
+        listId,
+        "Category"
+      );
+      let categoryColor: { category: string; color: string }[] = [];
       for (const cat of categoryDropdownOption) {
-        categoryColor.push({ category: cat.text, color: await this.colorGenerate() });
+        categoryColor.push({
+          category: cat.text,
+          color: await this.colorGenerate(),
+        });
       }
 
       const web = new Web(siteUrl);
-      const results = await web.lists.getById(listId).usingCaching().renderListDataAsStream(
-        {
+      const results = await web.lists
+        .getById(listId)
+        .usingCaching()
+        .renderListDataAsStream({
           DatesInUtc: true,
           ViewXml: `<View><ViewFields><FieldRef Name='RecurrenceData'/><FieldRef Name='Duration'/><FieldRef Name='Author'/><FieldRef Name='Category'/><FieldRef Name='Description'/><FieldRef Name='ParticipantsPicker'/><FieldRef Name='Geolocation'/><FieldRef Name='ID'/><FieldRef Name='EndDate'/><FieldRef Name='EventDate'/><FieldRef Name='ID'/><FieldRef Name='Location'/><FieldRef Name='Title'/><FieldRef Name='fAllDayEvent'/><FieldRef Name='EventType'/><FieldRef Name='UID' /><FieldRef Name='fRecurrence' /></ViewFields>
           <Query>
@@ -474,95 +596,130 @@ export default class spservices {
             <And>
               <Geq>
                 <FieldRef Name='EventDate' />
-                <Value IncludeTimeValue='false' Type='DateTime'>${moment(eventStartDate).format('YYYY-MM-DD')}</Value>
+                <Value IncludeTimeValue='false' Type='DateTime'>${moment(
+                  eventStartDate
+                ).format("YYYY-MM-DD")}</Value>
               </Geq>
               <Leq>
                 <FieldRef Name='EventDate' />
-                <Value IncludeTimeValue='false' Type='DateTime'>${moment(eventEndDate).format('YYYY-MM-DD')}</Value>
+                <Value IncludeTimeValue='false' Type='DateTime'>${moment(
+                  eventEndDate
+                ).format("YYYY-MM-DD")}</Value>
               </Leq>
               </And>
           </Where>
           </Query>
           <RowLimit Paged=\"FALSE\">2000</RowLimit>
-          </View>`
-        }
-      );
+          </View>`,
+        });
 
       if (results && results.Row.length > 0) {
-        let event: any = '';
-        const mapEvents = async () : Promise<boolean> => {
-            for (event of results.Row) {
-              const eventDate = await this.getLocalTime(event.EventDate);
-              const endDate = await this.getLocalTime(event.EndDate);
-              const initialsArray: string[] = event.Author[0].title.split(' ');
-              const initials: string = initialsArray[0].charAt(0) + initialsArray[initialsArray.length - 1].charAt(0);
-              const userPictureUrl = await this.getUserProfilePictureUrl(`i:0#.f|membership|${event.Author[0].email}`);
-              const attendees: number[] = [];
-              const first: number = event.Geolocation.indexOf('(') + 1;
-              const last: number = event.Geolocation.indexOf(')');
-              const geo = event.Geolocation.substring(first, last);
-              const geolocation = geo.split(' ');
-              const CategoryColorValue: any[] = categoryColor.filter((value) => {
-                return value.category == event.Category;
-              });
-              const isAllDayEvent: boolean = event["fAllDayEvent.value"] === "1";
+        let event: any = "";
+        const mapEvents = async (): Promise<boolean> => {
+          for (event of results.Row) {
+            const eventDate = await this.getLocalTime(event.EventDate);
+            const endDate = await this.getLocalTime(event.EndDate);
+            const initialsArray: string[] = event.Author[0].title.split(" ");
+            const initials: string =
+              initialsArray[0].charAt(0) +
+              initialsArray[initialsArray.length - 1].charAt(0);
+            const userPictureUrl = await this.getUserProfilePictureUrl(
+              `i:0#.f|membership|${event.Author[0].email}`
+            );
+            const attendees: number[] = [];
+            const first: number = event.Geolocation.indexOf("(") + 1;
+            const last: number = event.Geolocation.indexOf(")");
+            const geo = event.Geolocation.substring(first, last);
+            const geolocation = geo.split(" ");
+            const CategoryColorValue: any[] = categoryColor.filter((value) => {
+              return value.category == event.Category;
+            });
+            const isAllDayEvent: boolean = event["fAllDayEvent.value"] === "1";
 
-              for (const attendee of event.ParticipantsPicker) {
-                attendees.push(parseInt(attendee.id));
-              }
-
-              events.push({
-                Id: event.ID,
-                ID: event.ID,
-                EventType: event.EventType,
-                title: await this.deCodeHtmlEntities(event.Title),
-                Description: event.Description,
-                EventDate: isAllDayEvent ? new Date(event.EventDate.slice(0, -1)) : new Date(eventDate),
-                EndDate: isAllDayEvent ? new Date(event.EndDate.slice(0, -1)) : new Date(endDate),
-                location: event.Location,
-                ownerEmail: event.Author[0].email,
-                ownerPhoto: userPictureUrl ?
-                  `https://outlook.office365.com/owa/service.svc/s/GetPersonaPhoto?email=${event.Author[0].email}&UA=0&size=HR96x96` : '',
-                ownerInitial: initials,
-                color: CategoryColorValue.length > 0 ? CategoryColorValue[0].color : '#1a75ff', // blue default
-                ownerName: event.Author[0].title,
-                attendes: attendees,
-                fAllDayEvent: isAllDayEvent,
-                geolocation: { Longitude: parseFloat(geolocation[0]), Latitude: parseFloat(geolocation[1]) },
-                Category: event.Category,
-                Duration: event.Duration,
-                RecurrenceData: event.RecurrenceData ? await this.deCodeHtmlEntities(event.RecurrenceData) : "",
-                fRecurrence: event.fRecurrence,
-                RecurrenceID: event.RecurrenceID ? event.RecurrenceID : undefined,
-                MasterSeriesItemID: event.MasterSeriesItemID,
-                UID: event.UID.replace("{", "").replace("}", ""),
-              });
+            for (const attendee of event.ParticipantsPicker) {
+              attendees.push(parseInt(attendee.id));
             }
+
+            events.push({
+              Id: event.ID,
+              ID: event.ID,
+              EventType: event.EventType,
+              title: await this.deCodeHtmlEntities(event.Title),
+              Description: event.Description,
+              EventDate: isAllDayEvent
+                ? new Date(event.EventDate.slice(0, -1))
+                : new Date(eventDate),
+              EndDate: isAllDayEvent
+                ? new Date(event.EndDate.slice(0, -1))
+                : new Date(endDate),
+              location: event.Location,
+              ownerEmail: event.Author[0].email,
+              ownerPhoto: userPictureUrl
+                ? `https://outlook.office365.com/owa/service.svc/s/GetPersonaPhoto?email=${event.Author[0].email}&UA=0&size=HR96x96`
+                : "",
+              ownerInitial: initials,
+              color:
+                CategoryColorValue.length > 0
+                  ? CategoryColorValue[0].color
+                  : "#1a75ff", // blue default
+              ownerName: event.Author[0].title,
+              attendes: attendees,
+              fAllDayEvent: isAllDayEvent,
+              geolocation: {
+                Longitude: parseFloat(geolocation[0]),
+                Latitude: parseFloat(geolocation[1]),
+              },
+              Category: event.Category,
+              Duration: event.Duration,
+              RecurrenceData: event.RecurrenceData
+                ? await this.deCodeHtmlEntities(event.RecurrenceData)
+                : "",
+              fRecurrence: event.fRecurrence,
+              RecurrenceID: event.RecurrenceID ? event.RecurrenceID : undefined,
+              MasterSeriesItemID: event.MasterSeriesItemID,
+              UID: event.UID.replace("{", "").replace("}", ""),
+            });
+          }
           return true;
         };
         //Checks to see if there are any results saved in local storage
-        if(window.localStorage.getItem("eventResult")){
-          //if there is a local version - compares it to the current version 
-          if(window.localStorage.getItem("eventResult") === JSON.stringify(results)){
+        if (window.localStorage.getItem("eventResult")) {
+          //if there is a local version - compares it to the current version
+          if (
+            window.localStorage.getItem("eventResult") ===
+            JSON.stringify(results)
+          ) {
             //No update needed use current savedEvents
-            events = JSON.parse(window.localStorage.getItem("calendarEventsWithLocalTime"));
-          }else{
+            events = JSON.parse(
+              window.localStorage.getItem("calendarEventsWithLocalTime")
+            );
+          } else {
             //update local storage
             window.localStorage.setItem("eventResult", JSON.stringify(results));
             //when they are not equal then we loop through the results and maps them to IEventData
             /* tslint:disable:no-unused-expression */
-            await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+            (await mapEvents())
+              ? window.localStorage.setItem(
+                  "calendarEventsWithLocalTime",
+                  JSON.stringify(events)
+                )
+              : null;
           }
-        }else{
+        } else {
           //if there is no local storage of the events we create them
           window.localStorage.setItem("eventResult", JSON.stringify(results));
           //we also needs to map through the events the first time and save the mapped version to local storage
-          await mapEvents() ? window.localStorage.setItem("calendarEventsWithLocalTime", JSON.stringify(events)) : null;           
+          (await mapEvents())
+            ? window.localStorage.setItem(
+                "calendarEventsWithLocalTime",
+                JSON.stringify(events)
+              )
+            : null;
         }
       }
       let parseEvt: parseRecurrentEvent = new parseRecurrentEvent();
       events = parseEvt.parseEvents(events, null, null);
-       
+
       // Return Data
       return events;
     } catch (error) {
@@ -582,8 +739,9 @@ export default class spservices {
     let regionalSettings: RegionalSettings;
     try {
       const web = new Web(siteUrl);
-      regionalSettings = await web.regionalSettings.timeZone.usingCaching().get();
-
+      regionalSettings = await web.regionalSettings.timeZone
+        .usingCaching()
+        .get();
     } catch (error) {
       return Promise.reject(error);
     }
@@ -600,12 +758,12 @@ export default class spservices {
       const apiUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`;
       const results = await $.ajax({
         url: apiUrl,
-        type: 'GET',
-        dataType: 'json',
+        type: "GET",
+        dataType: "json",
         headers: {
-          'content-type': 'application/json;charset=utf-8',
-          'accept': 'application/json;odata=nometadata',
-        }
+          "content-type": "application/json;charset=utf-8",
+          accept: "application/json;odata=nometadata",
+        },
       });
 
       if (results) {
@@ -617,7 +775,6 @@ export default class spservices {
   }
 
   public async enCodeHtmlEntities(string: string) {
-
     const HtmlEntitiesMap = {
       "'": "&apos;",
       "<": "&lt;",
@@ -632,7 +789,7 @@ export default class spservices {
       "§": "&sect;",
       "¨": "&uml;",
       "©": "&copy;",
-      "ª": "&ordf;",
+      ª: "&ordf;",
       "«": "&laquo;",
       "¬": "&not;",
       "®": "&reg;",
@@ -642,141 +799,141 @@ export default class spservices {
       "²": "&sup2;",
       "³": "&sup3;",
       "´": "&acute;",
-      "µ": "&micro;",
+      µ: "&micro;",
       "¶": "&para;",
       "·": "&middot;",
       "¸": "&cedil;",
       "¹": "&sup1;",
-      "º": "&ordm;",
+      º: "&ordm;",
       "»": "&raquo;",
       "¼": "&frac14;",
       "½": "&frac12;",
       "¾": "&frac34;",
       "¿": "&iquest;",
-      "À": "&Agrave;",
-      "Á": "&Aacute;",
-      "Â": "&Acirc;",
-      "Ã": "&Atilde;",
-      "Ä": "&Auml;",
-      "Å": "&Aring;",
-      "Æ": "&AElig;",
-      "Ç": "&Ccedil;",
-      "È": "&Egrave;",
-      "É": "&Eacute;",
-      "Ê": "&Ecirc;",
-      "Ë": "&Euml;",
-      "Ì": "&Igrave;",
-      "Í": "&Iacute;",
-      "Î": "&Icirc;",
-      "Ï": "&Iuml;",
-      "Ð": "&ETH;",
-      "Ñ": "&Ntilde;",
-      "Ò": "&Ograve;",
-      "Ó": "&Oacute;",
-      "Ô": "&Ocirc;",
-      "Õ": "&Otilde;",
-      "Ö": "&Ouml;",
+      À: "&Agrave;",
+      Á: "&Aacute;",
+      Â: "&Acirc;",
+      Ã: "&Atilde;",
+      Ä: "&Auml;",
+      Å: "&Aring;",
+      Æ: "&AElig;",
+      Ç: "&Ccedil;",
+      È: "&Egrave;",
+      É: "&Eacute;",
+      Ê: "&Ecirc;",
+      Ë: "&Euml;",
+      Ì: "&Igrave;",
+      Í: "&Iacute;",
+      Î: "&Icirc;",
+      Ï: "&Iuml;",
+      Ð: "&ETH;",
+      Ñ: "&Ntilde;",
+      Ò: "&Ograve;",
+      Ó: "&Oacute;",
+      Ô: "&Ocirc;",
+      Õ: "&Otilde;",
+      Ö: "&Ouml;",
       "×": "&times;",
-      "Ø": "&Oslash;",
-      "Ù": "&Ugrave;",
-      "Ú": "&Uacute;",
-      "Û": "&Ucirc;",
-      "Ü": "&Uuml;",
-      "Ý": "&Yacute;",
-      "Þ": "&THORN;",
-      "ß": "&szlig;",
-      "à": "&agrave;",
-      "á": "&aacute;",
-      "â": "&acirc;",
-      "ã": "&atilde;",
-      "ä": "&auml;",
-      "å": "&aring;",
-      "æ": "&aelig;",
-      "ç": "&ccedil;",
-      "è": "&egrave;",
-      "é": "&eacute;",
-      "ê": "&ecirc;",
-      "ë": "&euml;",
-      "ì": "&igrave;",
-      "í": "&iacute;",
-      "î": "&icirc;",
-      "ï": "&iuml;",
-      "ð": "&eth;",
-      "ñ": "&ntilde;",
-      "ò": "&ograve;",
-      "ó": "&oacute;",
-      "ô": "&ocirc;",
-      "õ": "&otilde;",
-      "ö": "&ouml;",
+      Ø: "&Oslash;",
+      Ù: "&Ugrave;",
+      Ú: "&Uacute;",
+      Û: "&Ucirc;",
+      Ü: "&Uuml;",
+      Ý: "&Yacute;",
+      Þ: "&THORN;",
+      ß: "&szlig;",
+      à: "&agrave;",
+      á: "&aacute;",
+      â: "&acirc;",
+      ã: "&atilde;",
+      ä: "&auml;",
+      å: "&aring;",
+      æ: "&aelig;",
+      ç: "&ccedil;",
+      è: "&egrave;",
+      é: "&eacute;",
+      ê: "&ecirc;",
+      ë: "&euml;",
+      ì: "&igrave;",
+      í: "&iacute;",
+      î: "&icirc;",
+      ï: "&iuml;",
+      ð: "&eth;",
+      ñ: "&ntilde;",
+      ò: "&ograve;",
+      ó: "&oacute;",
+      ô: "&ocirc;",
+      õ: "&otilde;",
+      ö: "&ouml;",
       "÷": "&divide;",
-      "ø": "&oslash;",
-      "ù": "&ugrave;",
-      "ú": "&uacute;",
-      "û": "&ucirc;",
-      "ü": "&uuml;",
-      "ý": "&yacute;",
-      "þ": "&thorn;",
-      "ÿ": "&yuml;",
-      "Œ": "&OElig;",
-      "œ": "&oelig;",
-      "Š": "&Scaron;",
-      "š": "&scaron;",
-      "Ÿ": "&Yuml;",
-      "ƒ": "&fnof;",
-      "ˆ": "&circ;",
+      ø: "&oslash;",
+      ù: "&ugrave;",
+      ú: "&uacute;",
+      û: "&ucirc;",
+      ü: "&uuml;",
+      ý: "&yacute;",
+      þ: "&thorn;",
+      ÿ: "&yuml;",
+      Œ: "&OElig;",
+      œ: "&oelig;",
+      Š: "&Scaron;",
+      š: "&scaron;",
+      Ÿ: "&Yuml;",
+      ƒ: "&fnof;",
+      ˆ: "&circ;",
       "˜": "&tilde;",
-      "Α": "&Alpha;",
-      "Β": "&Beta;",
-      "Γ": "&Gamma;",
-      "Δ": "&Delta;",
-      "Ε": "&Epsilon;",
-      "Ζ": "&Zeta;",
-      "Η": "&Eta;",
-      "Θ": "&Theta;",
-      "Ι": "&Iota;",
-      "Κ": "&Kappa;",
-      "Λ": "&Lambda;",
-      "Μ": "&Mu;",
-      "Ν": "&Nu;",
-      "Ξ": "&Xi;",
-      "Ο": "&Omicron;",
-      "Π": "&Pi;",
-      "Ρ": "&Rho;",
-      "Σ": "&Sigma;",
-      "Τ": "&Tau;",
-      "Υ": "&Upsilon;",
-      "Φ": "&Phi;",
-      "Χ": "&Chi;",
-      "Ψ": "&Psi;",
-      "Ω": "&Omega;",
-      "α": "&alpha;",
-      "β": "&beta;",
-      "γ": "&gamma;",
-      "δ": "&delta;",
-      "ε": "&epsilon;",
-      "ζ": "&zeta;",
-      "η": "&eta;",
-      "θ": "&theta;",
-      "ι": "&iota;",
-      "κ": "&kappa;",
-      "λ": "&lambda;",
-      "μ": "&mu;",
-      "ν": "&nu;",
-      "ξ": "&xi;",
-      "ο": "&omicron;",
-      "π": "&pi;",
-      "ρ": "&rho;",
-      "ς": "&sigmaf;",
-      "σ": "&sigma;",
-      "τ": "&tau;",
-      "υ": "&upsilon;",
-      "φ": "&phi;",
-      "χ": "&chi;",
-      "ψ": "&psi;",
-      "ω": "&omega;",
-      "ϑ": "&thetasym;",
-      "ϒ": "&Upsih;",
-      "ϖ": "&piv;",
+      Α: "&Alpha;",
+      Β: "&Beta;",
+      Γ: "&Gamma;",
+      Δ: "&Delta;",
+      Ε: "&Epsilon;",
+      Ζ: "&Zeta;",
+      Η: "&Eta;",
+      Θ: "&Theta;",
+      Ι: "&Iota;",
+      Κ: "&Kappa;",
+      Λ: "&Lambda;",
+      Μ: "&Mu;",
+      Ν: "&Nu;",
+      Ξ: "&Xi;",
+      Ο: "&Omicron;",
+      Π: "&Pi;",
+      Ρ: "&Rho;",
+      Σ: "&Sigma;",
+      Τ: "&Tau;",
+      Υ: "&Upsilon;",
+      Φ: "&Phi;",
+      Χ: "&Chi;",
+      Ψ: "&Psi;",
+      Ω: "&Omega;",
+      α: "&alpha;",
+      β: "&beta;",
+      γ: "&gamma;",
+      δ: "&delta;",
+      ε: "&epsilon;",
+      ζ: "&zeta;",
+      η: "&eta;",
+      θ: "&theta;",
+      ι: "&iota;",
+      κ: "&kappa;",
+      λ: "&lambda;",
+      μ: "&mu;",
+      ν: "&nu;",
+      ξ: "&xi;",
+      ο: "&omicron;",
+      π: "&pi;",
+      ρ: "&rho;",
+      ς: "&sigmaf;",
+      σ: "&sigma;",
+      τ: "&tau;",
+      υ: "&upsilon;",
+      φ: "&phi;",
+      χ: "&chi;",
+      ψ: "&psi;",
+      ω: "&omega;",
+      ϑ: "&thetasym;",
+      ϒ: "&Upsih;",
+      ϖ: "&piv;",
       "–": "&ndash;",
       "—": "&mdash;",
       "‘": "&lsquo;",
@@ -797,11 +954,11 @@ export default class spservices {
       "‾": "&oline;",
       "⁄": "&frasl;",
       "€": "&euro;",
-      "ℑ": "&image;",
+      ℑ: "&image;",
       "℘": "&weierp;",
-      "ℜ": "&real;",
+      ℜ: "&real;",
       "™": "&trade;",
-      "ℵ": "&alefsym;",
+      ℵ: "&alefsym;",
       "←": "&larr;",
       "↑": "&uarr;",
       "→": "&rarr;",
@@ -861,22 +1018,21 @@ export default class spservices {
       "♠": "&spades;",
       "♣": "&clubs;",
       "♥": "&hearts;",
-      "♦": "&diams;"
+      "♦": "&diams;",
     };
 
     var entityMap = HtmlEntitiesMap;
-    string = string.replace(/&/g, '&amp;');
-    string = string.replace(/"/g, '&quot;');
+    string = string.replace(/&/g, "&amp;");
+    string = string.replace(/"/g, "&quot;");
     for (var key in entityMap) {
       var entity = entityMap[key];
-      var regex = new RegExp(key, 'g');
+      var regex = new RegExp(key, "g");
       string = string.replace(regex, entity);
     }
     return string;
   }
 
   public async deCodeHtmlEntities(string: string) {
-
     const HtmlEntitiesMap = {
       "'": "&#39;",
       "<": "&lt;",
@@ -891,7 +1047,7 @@ export default class spservices {
       "§": "&sect;",
       "¨": "&uml;",
       "©": "&copy;",
-      "ª": "&ordf;",
+      ª: "&ordf;",
       "«": "&laquo;",
       "¬": "&not;",
       "®": "&reg;",
@@ -901,141 +1057,141 @@ export default class spservices {
       "²": "&sup2;",
       "³": "&sup3;",
       "´": "&acute;",
-      "µ": "&micro;",
+      µ: "&micro;",
       "¶": "&para;",
       "·": "&middot;",
       "¸": "&cedil;",
       "¹": "&sup1;",
-      "º": "&ordm;",
+      º: "&ordm;",
       "»": "&raquo;",
       "¼": "&frac14;",
       "½": "&frac12;",
       "¾": "&frac34;",
       "¿": "&iquest;",
-      "À": "&Agrave;",
-      "Á": "&Aacute;",
-      "Â": "&Acirc;",
-      "Ã": "&Atilde;",
-      "Ä": "&Auml;",
-      "Å": "&Aring;",
-      "Æ": "&AElig;",
-      "Ç": "&Ccedil;",
-      "È": "&Egrave;",
-      "É": "&Eacute;",
-      "Ê": "&Ecirc;",
-      "Ë": "&Euml;",
-      "Ì": "&Igrave;",
-      "Í": "&Iacute;",
-      "Î": "&Icirc;",
-      "Ï": "&Iuml;",
-      "Ð": "&ETH;",
-      "Ñ": "&Ntilde;",
-      "Ò": "&Ograve;",
-      "Ó": "&Oacute;",
-      "Ô": "&Ocirc;",
-      "Õ": "&Otilde;",
-      "Ö": "&Ouml;",
+      À: "&Agrave;",
+      Á: "&Aacute;",
+      Â: "&Acirc;",
+      Ã: "&Atilde;",
+      Ä: "&Auml;",
+      Å: "&Aring;",
+      Æ: "&AElig;",
+      Ç: "&Ccedil;",
+      È: "&Egrave;",
+      É: "&Eacute;",
+      Ê: "&Ecirc;",
+      Ë: "&Euml;",
+      Ì: "&Igrave;",
+      Í: "&Iacute;",
+      Î: "&Icirc;",
+      Ï: "&Iuml;",
+      Ð: "&ETH;",
+      Ñ: "&Ntilde;",
+      Ò: "&Ograve;",
+      Ó: "&Oacute;",
+      Ô: "&Ocirc;",
+      Õ: "&Otilde;",
+      Ö: "&Ouml;",
       "×": "&times;",
-      "Ø": "&Oslash;",
-      "Ù": "&Ugrave;",
-      "Ú": "&Uacute;",
-      "Û": "&Ucirc;",
-      "Ü": "&Uuml;",
-      "Ý": "&Yacute;",
-      "Þ": "&THORN;",
-      "ß": "&szlig;",
-      "à": "&agrave;",
-      "á": "&aacute;",
-      "â": "&acirc;",
-      "ã": "&atilde;",
-      "ä": "&auml;",
-      "å": "&aring;",
-      "æ": "&aelig;",
-      "ç": "&ccedil;",
-      "è": "&egrave;",
-      "é": "&eacute;",
-      "ê": "&ecirc;",
-      "ë": "&euml;",
-      "ì": "&igrave;",
-      "í": "&iacute;",
-      "î": "&icirc;",
-      "ï": "&iuml;",
-      "ð": "&eth;",
-      "ñ": "&ntilde;",
-      "ò": "&ograve;",
-      "ó": "&oacute;",
-      "ô": "&ocirc;",
-      "õ": "&otilde;",
-      "ö": "&ouml;",
+      Ø: "&Oslash;",
+      Ù: "&Ugrave;",
+      Ú: "&Uacute;",
+      Û: "&Ucirc;",
+      Ü: "&Uuml;",
+      Ý: "&Yacute;",
+      Þ: "&THORN;",
+      ß: "&szlig;",
+      à: "&agrave;",
+      á: "&aacute;",
+      â: "&acirc;",
+      ã: "&atilde;",
+      ä: "&auml;",
+      å: "&aring;",
+      æ: "&aelig;",
+      ç: "&ccedil;",
+      è: "&egrave;",
+      é: "&eacute;",
+      ê: "&ecirc;",
+      ë: "&euml;",
+      ì: "&igrave;",
+      í: "&iacute;",
+      î: "&icirc;",
+      ï: "&iuml;",
+      ð: "&eth;",
+      ñ: "&ntilde;",
+      ò: "&ograve;",
+      ó: "&oacute;",
+      ô: "&ocirc;",
+      õ: "&otilde;",
+      ö: "&ouml;",
       "÷": "&divide;",
-      "ø": "&oslash;",
-      "ù": "&ugrave;",
-      "ú": "&uacute;",
-      "û": "&ucirc;",
-      "ü": "&uuml;",
-      "ý": "&yacute;",
-      "þ": "&thorn;",
-      "ÿ": "&yuml;",
-      "Œ": "&OElig;",
-      "œ": "&oelig;",
-      "Š": "&Scaron;",
-      "š": "&scaron;",
-      "Ÿ": "&Yuml;",
-      "ƒ": "&fnof;",
-      "ˆ": "&circ;",
+      ø: "&oslash;",
+      ù: "&ugrave;",
+      ú: "&uacute;",
+      û: "&ucirc;",
+      ü: "&uuml;",
+      ý: "&yacute;",
+      þ: "&thorn;",
+      ÿ: "&yuml;",
+      Œ: "&OElig;",
+      œ: "&oelig;",
+      Š: "&Scaron;",
+      š: "&scaron;",
+      Ÿ: "&Yuml;",
+      ƒ: "&fnof;",
+      ˆ: "&circ;",
       "˜": "&tilde;",
-      "Α": "&Alpha;",
-      "Β": "&Beta;",
-      "Γ": "&Gamma;",
-      "Δ": "&Delta;",
-      "Ε": "&Epsilon;",
-      "Ζ": "&Zeta;",
-      "Η": "&Eta;",
-      "Θ": "&Theta;",
-      "Ι": "&Iota;",
-      "Κ": "&Kappa;",
-      "Λ": "&Lambda;",
-      "Μ": "&Mu;",
-      "Ν": "&Nu;",
-      "Ξ": "&Xi;",
-      "Ο": "&Omicron;",
-      "Π": "&Pi;",
-      "Ρ": "&Rho;",
-      "Σ": "&Sigma;",
-      "Τ": "&Tau;",
-      "Υ": "&Upsilon;",
-      "Φ": "&Phi;",
-      "Χ": "&Chi;",
-      "Ψ": "&Psi;",
-      "Ω": "&Omega;",
-      "α": "&alpha;",
-      "β": "&beta;",
-      "γ": "&gamma;",
-      "δ": "&delta;",
-      "ε": "&epsilon;",
-      "ζ": "&zeta;",
-      "η": "&eta;",
-      "θ": "&theta;",
-      "ι": "&iota;",
-      "κ": "&kappa;",
-      "λ": "&lambda;",
-      "μ": "&mu;",
-      "ν": "&nu;",
-      "ξ": "&xi;",
-      "ο": "&omicron;",
-      "π": "&pi;",
-      "ρ": "&rho;",
-      "ς": "&sigmaf;",
-      "σ": "&sigma;",
-      "τ": "&tau;",
-      "υ": "&upsilon;",
-      "φ": "&phi;",
-      "χ": "&chi;",
-      "ψ": "&psi;",
-      "ω": "&omega;",
-      "ϑ": "&thetasym;",
-      "ϒ": "&Upsih;",
-      "ϖ": "&piv;",
+      Α: "&Alpha;",
+      Β: "&Beta;",
+      Γ: "&Gamma;",
+      Δ: "&Delta;",
+      Ε: "&Epsilon;",
+      Ζ: "&Zeta;",
+      Η: "&Eta;",
+      Θ: "&Theta;",
+      Ι: "&Iota;",
+      Κ: "&Kappa;",
+      Λ: "&Lambda;",
+      Μ: "&Mu;",
+      Ν: "&Nu;",
+      Ξ: "&Xi;",
+      Ο: "&Omicron;",
+      Π: "&Pi;",
+      Ρ: "&Rho;",
+      Σ: "&Sigma;",
+      Τ: "&Tau;",
+      Υ: "&Upsilon;",
+      Φ: "&Phi;",
+      Χ: "&Chi;",
+      Ψ: "&Psi;",
+      Ω: "&Omega;",
+      α: "&alpha;",
+      β: "&beta;",
+      γ: "&gamma;",
+      δ: "&delta;",
+      ε: "&epsilon;",
+      ζ: "&zeta;",
+      η: "&eta;",
+      θ: "&theta;",
+      ι: "&iota;",
+      κ: "&kappa;",
+      λ: "&lambda;",
+      μ: "&mu;",
+      ν: "&nu;",
+      ξ: "&xi;",
+      ο: "&omicron;",
+      π: "&pi;",
+      ρ: "&rho;",
+      ς: "&sigmaf;",
+      σ: "&sigma;",
+      τ: "&tau;",
+      υ: "&upsilon;",
+      φ: "&phi;",
+      χ: "&chi;",
+      ψ: "&psi;",
+      ω: "&omega;",
+      ϑ: "&thetasym;",
+      ϒ: "&Upsih;",
+      ϖ: "&piv;",
       "–": "&ndash;",
       "—": "&mdash;",
       "‘": "&lsquo;",
@@ -1056,11 +1212,11 @@ export default class spservices {
       "‾": "&oline;",
       "⁄": "&frasl;",
       "€": "&euro;",
-      "ℑ": "&image;",
+      ℑ: "&image;",
       "℘": "&weierp;",
-      "ℜ": "&real;",
+      ℜ: "&real;",
       "™": "&trade;",
-      "ℵ": "&alefsym;",
+      ℵ: "&alefsym;",
       "←": "&larr;",
       "↑": "&uarr;",
       "→": "&rarr;",
@@ -1120,20 +1276,17 @@ export default class spservices {
       "♠": "&spades;",
       "♣": "&clubs;",
       "♥": "&hearts;",
-      "♦": "&diams;"
+      "♦": "&diams;",
     };
 
     var entityMap = HtmlEntitiesMap;
     for (var key in entityMap) {
       var entity = entityMap[key];
-      var regex = new RegExp(entity, 'g');
+      var regex = new RegExp(entity, "g");
       string = string.replace(regex, key);
     }
     string = string.replace(/&quot;/g, '"');
-    string = string.replace(/&amp;/g, '&');
+    string = string.replace(/&amp;/g, "&");
     return string;
   }
-
-
-
 }
