@@ -818,17 +818,17 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
     // :::: Tested Working ::::
 
-    await this.props.context.msGraphClientFactory
-      .getClient()
-      .then((client: MSGraphClient) => {
-        client.api("me/events").post(event);
-      })
-      .then(() => {
-        console.log("Event Added");
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    // await this.props.context.msGraphClientFactory
+    //   .getClient()
+    //   .then((client: MSGraphClient) => {
+    //     client.api("me/events").post(event);
+    //   })
+    //   .then(() => {
+    //     console.log("Event Added");
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //   });
 
     // ::::::::::::::::::::
 

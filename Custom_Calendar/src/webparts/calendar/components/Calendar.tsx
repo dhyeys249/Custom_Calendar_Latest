@@ -1,16 +1,20 @@
-import * as React from 'react';
-import styles from './Calendar.module.scss';
-import { ICalendarProps } from './ICalendarProps';
-import { ICalendarState } from './ICalendarState';
-import { escape } from '@microsoft/sp-lodash-subset';
-import * as moment from 'moment';
-import * as strings from 'CalendarWebPartStrings';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-require('./calendar.css');
-import { CommunicationColors, FluentCustomizations, FluentTheme } from '@uifabric/fluent-theme';
-import Year from './Year';
+import * as React from "react";
+import styles from "./Calendar.module.scss";
+import { ICalendarProps } from "./ICalendarProps";
+import { ICalendarState } from "./ICalendarState";
+import { escape } from "@microsoft/sp-lodash-subset";
+import * as moment from "moment";
+import * as strings from "CalendarWebPartStrings";
+import "react-big-calendar/lib/css/react-big-calendar.css";
+require("./calendar.css");
+import {
+  CommunicationColors,
+  FluentCustomizations,
+  FluentTheme,
+} from "@uifabric/fluent-theme";
+import Year from "./Year";
 
-import { Calendar as MyCalendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar as MyCalendar, momentLocalizer } from "react-big-calendar";
 
 import {
   Customizer,
@@ -18,7 +22,11 @@ import {
   Persona,
   PersonaSize,
   PersonaPresence,
-  HoverCard, IHoverCard, IPlainCardProps, HoverCardType, DefaultButton,
+  HoverCard,
+  IHoverCard,
+  IPlainCardProps,
+  HoverCardType,
+  DefaultButton,
   DocumentCard,
   DocumentCardActivity,
   DocumentCardDetails,
@@ -37,23 +45,21 @@ import {
   SpinnerSize,
   MessageBar,
   MessageBarType,
-
-
-} from 'office-ui-fabric-react';
-import { EnvironmentType } from '@microsoft/sp-core-library';
-import { mergeStyleSets } from 'office-ui-fabric-react/lib/Styling';
+} from "office-ui-fabric-react";
+import { EnvironmentType } from "@microsoft/sp-core-library";
+import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
 import { WebPartTitle } from "@pnp/spfx-controls-react/lib/WebPartTitle";
 import { Placeholder } from "@pnp/spfx-controls-react/lib/Placeholder";
 import { WebPartContext } from "@microsoft/sp-webpart-base";
-import { DisplayMode } from '@microsoft/sp-core-library';
-import spservices from '../../../services/spservices';
-import { stringIsNullOrEmpty } from '@pnp/common';
-import { Event } from '../../../controls/Event/event';
-import { IPanelModelEnum } from '../../../controls/Event/IPanelModeEnum';
-import { IEventData } from './../../../services/IEventData';
-import { IUserPermissions } from './../../../services/IUserPermissions';
-
-
+import { DisplayMode } from "@microsoft/sp-core-library";
+import spservices from "../../../services/spservices";
+import { stringIsNullOrEmpty } from "@pnp/common";
+import { Event } from "../../../controls/Event/event";
+import { IPanelModelEnum } from "../../../controls/Event/IPanelModeEnum";
+import { IEventData } from "./../../../services/IEventData";
+import { IUserPermissions } from "./../../../services/IUserPermissions";
+import { MSGraphClient } from "@microsoft/sp-http";
+import * as MicrosoftGraph from "@microsoft/microsoft-graph-types";
 //const localizer = BigCalendar.momentLocalizer(moment);
 const localizer = momentLocalizer(moment);
 /**
@@ -61,7 +67,10 @@ const localizer = momentLocalizer(moment);
  * @class Calendar
  * @extends {React.Component<ICalendarProps, ICalendarState>}
  */
-export default class Calendar extends React.Component<ICalendarProps, ICalendarState> {
+export default class Calendar extends React.Component<
+  ICalendarProps,
+  ICalendarState
+> {
   private spService: spservices = null;
   private userListPermissions: IUserPermissions = undefined;
   public constructor(props) {
@@ -73,15 +82,16 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
       selectedEvent: undefined,
       isloading: true,
       hasError: false,
-      errorMessage: '',
+      errorMessage: "",
     };
 
     this.onDismissPanel = this.onDismissPanel.bind(this);
     this.onSelectEvent = this.onSelectEvent.bind(this);
     this.onSelectSlot = this.onSelectSlot.bind(this);
     this.spService = new spservices(this.props.context);
-    moment.locale(this.props.context.pageContext.cultureInfo.currentUICultureName);
-
+    moment.locale(
+      this.props.context.pageContext.cultureInfo.currentUICultureName
+    );
   }
 
   private onDocumentCardClick(ev: React.SyntheticEvent<HTMLElement, Event>) {
@@ -94,7 +104,11 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    * @memberof Calendar
    */
   private onSelectEvent(event: any) {
-    this.setState({ showDialog: true, selectedEvent: event, panelMode: IPanelModelEnum.edit });
+    this.setState({
+      showDialog: true,
+      selectedEvent: event,
+      panelMode: IPanelModelEnum.edit,
+    });
   }
 
   /**
@@ -104,7 +118,6 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    * @memberof Calendar
    */
   private async onDismissPanel(refresh: boolean) {
-
     this.setState({ showDialog: false });
     if (refresh === true) {
       this.setState({ isloading: true });
@@ -119,23 +132,66 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
   private async loadEvents() {
     try {
       // Teste Properties
-      if (!this.props.list || !this.props.siteUrl || !this.props.eventStartDate.value || !this.props.eventEndDate.value) return;
+      if (
+        !this.props.list ||
+        !this.props.siteUrl ||
+        !this.props.eventStartDate.value ||
+        !this.props.eventEndDate.value
+      )
+        return;
 
-      this.userListPermissions = await this.spService.getUserPermissions(this.props.siteUrl, this.props.list);
-      
-      const eventsData: IEventData[] = await this.spService.getEvents(escape(this.props.siteUrl), escape(this.props.list), this.props.eventStartDate.value, this.props.eventEndDate.value);
+      this.userListPermissions = await this.spService.getUserPermissions(
+        this.props.siteUrl,
+        this.props.list
+      );
 
-      this.setState({ eventData: eventsData, hasError: false, errorMessage: "" });
+      const eventsData: IEventData[] = await this.spService.getEvents(
+        escape(this.props.siteUrl),
+        escape(this.props.list),
+        this.props.eventStartDate.value,
+        this.props.eventEndDate.value
+      );
+
+      this.setState({
+        eventData: eventsData,
+        hasError: false,
+        errorMessage: "",
+      });
     } catch (error) {
-      this.setState({ hasError: true, errorMessage: error.message, isloading: false });
+      this.setState({
+        hasError: true,
+        errorMessage: error.message,
+        isloading: false,
+      });
     }
   }
+
+  public async loadOutlookEvents() {
+    this.context.msGraphClientFactory
+      .getClient()
+      .then((client: MSGraphClient) => {
+        client
+          .api("me/events")
+          .version("v1.0")
+          .select("subject,organizer,start,end")
+          .get((error, response: any, rawResponse?: any) => {
+            if (error) {
+              console.log(error);
+              return;
+            }
+            const events: MicrosoftGraph.Event[] = response.value;
+            console.log(events);
+          });
+      });
+  }
+
   /**
    * @memberof Calendar
    */
   public async componentDidMount() {
     this.setState({ isloading: true });
     await this.loadEvents();
+    await this.loadOutlookEvents();
     this.setState({ isloading: false });
   }
 
@@ -155,11 +211,23 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    * @param {ICalendarState} prevState
    * @memberof Calendar
    */
-  public async componentDidUpdate(prevProps: ICalendarProps, prevState: ICalendarState) {
-
-    if (!this.props.list || !this.props.siteUrl || !this.props.eventStartDate.value || !this.props.eventEndDate.value) return;
+  public async componentDidUpdate(
+    prevProps: ICalendarProps,
+    prevState: ICalendarState
+  ) {
+    if (
+      !this.props.list ||
+      !this.props.siteUrl ||
+      !this.props.eventStartDate.value ||
+      !this.props.eventEndDate.value
+    )
+      return;
     // Get  Properties change
-    if (prevProps.list !== this.props.list || this.props.eventStartDate.value !== prevProps.eventStartDate.value || this.props.eventEndDate.value !== prevProps.eventEndDate.value) {
+    if (
+      prevProps.list !== this.props.list ||
+      this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
+      this.props.eventEndDate.value !== prevProps.eventEndDate.value
+    ) {
       this.setState({ isloading: true });
       await this.loadEvents();
       this.setState({ isloading: false });
@@ -172,20 +240,23 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    * @memberof Calendar
    */
   private renderEvent({ event }) {
-
     const previewEventIcon: IDocumentCardPreviewProps = {
       previewImages: [
         {
           // previewImageSrc: event.ownerPhoto,
-          previewIconProps: { iconName: event.fRecurrence === '0' ? 'Calendar' : 'RecurringEvent', styles: { root: { color: event.color } }, className: styles.previewEventIcon },
+          previewIconProps: {
+            iconName: event.fRecurrence === "0" ? "Calendar" : "RecurringEvent",
+            styles: { root: { color: event.color } },
+            className: styles.previewEventIcon,
+          },
           height: 43,
-        }
-      ]
+        },
+      ],
     };
     const EventInfo: IPersonaSharedProps = {
       imageInitials: event.ownerInitial,
       imageUrl: event.ownerPhoto,
-      text: event.title
+      text: event.title,
     };
 
     /**
@@ -194,22 +265,39 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
     const onRenderPlainCard = (): JSX.Element => {
       return (
         <div className={styles.plainCard}>
-          <DocumentCard className={styles.Documentcard}   >
+          <DocumentCard className={styles.Documentcard}>
             <div>
               <DocumentCardPreview {...previewEventIcon} />
             </div>
             <DocumentCardDetails>
               <div className={styles.DocumentCardDetails}>
-                <DocumentCardTitle title={event.title} shouldTruncate={true} className={styles.DocumentCardTitle} styles={{ root: { color: event.color } }} />
+                <DocumentCardTitle
+                  title={event.title}
+                  shouldTruncate={true}
+                  className={styles.DocumentCardTitle}
+                  styles={{ root: { color: event.color } }}
+                />
               </div>
-              {
-                moment(event.EventDate).format('YYYY/MM/DD') !== moment(event.EndDate).format('YYYY/MM/DD') ?
-                  <span className={styles.DocumentCardTitleTime}>{moment(event.EventDate).format('dddd')} - {moment(event.EndDate).format('dddd')} </span>
-                  :
-                  <span className={styles.DocumentCardTitleTime}>{moment(event.EventDate).format('dddd')} </span>
-              }
-              <span className={styles.DocumentCardTitleTime}>{moment(event.EventDate).format('HH:mm')}H - {moment(event.EndDate).format('HH:mm')}H</span>
-              <Icon iconName='MapPin' className={styles.locationIcon} style={{ color: event.color }} />
+              {moment(event.EventDate).format("YYYY/MM/DD") !==
+              moment(event.EndDate).format("YYYY/MM/DD") ? (
+                <span className={styles.DocumentCardTitleTime}>
+                  {moment(event.EventDate).format("dddd")} -{" "}
+                  {moment(event.EndDate).format("dddd")}{" "}
+                </span>
+              ) : (
+                <span className={styles.DocumentCardTitleTime}>
+                  {moment(event.EventDate).format("dddd")}{" "}
+                </span>
+              )}
+              <span className={styles.DocumentCardTitleTime}>
+                {moment(event.EventDate).format("HH:mm")}H -{" "}
+                {moment(event.EndDate).format("HH:mm")}H
+              </span>
+              <Icon
+                iconName="MapPin"
+                className={styles.locationIcon}
+                style={{ color: event.color }}
+              />
               <DocumentCardTitle
                 title={`${event.location}`}
                 shouldTruncate={true}
@@ -219,7 +307,13 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
               <div style={{ marginTop: 20 }}>
                 <DocumentCardActivity
                   activity={strings.EventOwnerLabel}
-                  people={[{ name: event.ownerName, profileImageSrc: event.ownerPhoto, initialsColor: event.color }]}
+                  people={[
+                    {
+                      name: event.ownerName,
+                      profileImageSrc: event.ownerPhoto,
+                      initialsColor: event.color,
+                    },
+                  ]}
                 />
               </div>
             </DocumentCardDetails>
@@ -234,8 +328,7 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
           cardDismissDelay={1000}
           type={HoverCardType.plain}
           plainCardProps={{ onRenderPlainCard: onRenderPlainCard }}
-          onCardHide={(): void => {
-          }}
+          onCardHide={(): void => {}}
         >
           <Persona
             {...EventInfo}
@@ -265,7 +358,13 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    */
   public async onSelectSlot({ start, end }) {
     if (!this.userListPermissions.hasPermissionAdd) return;
-    this.setState({ showDialog: true, startDateSlot: start, endDateSlot: end, selectedEvent: undefined, panelMode: IPanelModelEnum.add });
+    this.setState({
+      showDialog: true,
+      startDateSlot: start,
+      endDateSlot: end,
+      selectedEvent: undefined,
+      panelMode: IPanelModelEnum.add,
+    });
   }
 
   /**
@@ -278,33 +377,31 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
    * @memberof Calendar
    */
   public eventStyleGetter(event, start, end, isSelected): any {
-
     let style: any = {
-      backgroundColor: 'white',
-      borderRadius: '0px',
+      backgroundColor: "white",
+      borderRadius: "0px",
       opacity: 1,
       color: event.color,
-      borderWidth: '1.1px',
-      borderStyle: 'solid',
+      borderWidth: "1.1px",
+      borderStyle: "solid",
       borderColor: event.color,
-      borderLeftWidth: '6px',
-      display: 'block'
+      borderLeftWidth: "6px",
+      display: "block",
     };
 
     return {
-      style: style
+      style: style,
     };
   }
 
-
   /**
-    *
-    * @param {*} date
-    * @memberof Calendar
-    */
+   *
+   * @param {*} date
+   * @memberof Calendar
+   */
   public dayPropGetter(date: Date) {
     return {
-      className: styles.dayPropGetter
+      className: styles.dayPropGetter,
     };
   }
 
@@ -316,72 +413,79 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
   public render(): React.ReactElement<ICalendarProps> {
     return (
       <Customizer {...FluentCustomizations}>
-
-
-        <div className={styles.calendar} style={{ backgroundColor: 'white', padding: '20px' }}>
-          <WebPartTitle displayMode={this.props.displayMode}
+        <div
+          className={styles.calendar}
+          style={{ backgroundColor: "white", padding: "20px" }}
+        >
+          <WebPartTitle
+            displayMode={this.props.displayMode}
             title={this.props.title}
-            updateProperty={this.props.updateProperty} />
-          {
-            (!this.props.list || !this.props.eventStartDate.value || !this.props.eventEndDate.value) ?
-              <Placeholder iconName='Edit'
-                iconText={strings.WebpartConfigIconText}
-                description={strings.WebpartConfigDescription}
-                buttonLabel={strings.WebPartConfigButtonLabel}
-                hideButton={this.props.displayMode === DisplayMode.Read}
-                onConfigure={this.onConfigure.bind(this)} />
-              :
-              // test if has errors
-              this.state.hasError ?
-                <MessageBar messageBarType={MessageBarType.error}>
-                  {this.state.errorMessage}
-                </MessageBar>
-                :
-                // show Calendar
-                // Test if is loading Events
-                <div>
-                  {this.state.isloading ? <Spinner size={SpinnerSize.large} label={strings.LoadingEventsLabel} /> :
-                    <div className={styles.container}>
-                      <MyCalendar
-                        dayPropGetter={this.dayPropGetter}
-                        localizer={localizer}
-                        selectable
-                        events={this.state.eventData}
-                        startAccessor="EventDate"
-                        endAccessor="EndDate"
-                        eventPropGetter={this.eventStyleGetter}
-                        onSelectSlot={this.onSelectSlot}
-                        components={{
-                          event: this.renderEvent
-                        }}
-                        onSelectEvent={this.onSelectEvent}
-                        defaultDate={moment().startOf('day').toDate()}
-                        views={{
-                          day: true,
-                          week: true,
-                          month: true,
-                          agenda: true,
-                          work_week: Year
-                        }}
-                        messages={
-                          {
-                            'today': strings.todayLabel,
-                            'previous': strings.previousLabel,
-                            'next': strings.nextLabel,
-                            'month': strings.monthLabel,
-                            'week': strings.weekLabel,
-                            'day': strings.dayLable,
-                            'showMore': total => `+${total} ${strings.showMore}`,
-                            'work_week': strings.yearHeaderLabel
-                          }
-                        }
-                      />
-                    </div>
-                  }
+            updateProperty={this.props.updateProperty}
+          />
+          {!this.props.list ||
+          !this.props.eventStartDate.value ||
+          !this.props.eventEndDate.value ? (
+            <Placeholder
+              iconName="Edit"
+              iconText={strings.WebpartConfigIconText}
+              description={strings.WebpartConfigDescription}
+              buttonLabel={strings.WebPartConfigButtonLabel}
+              hideButton={this.props.displayMode === DisplayMode.Read}
+              onConfigure={this.onConfigure.bind(this)}
+            />
+          ) : // test if has errors
+          this.state.hasError ? (
+            <MessageBar messageBarType={MessageBarType.error}>
+              {this.state.errorMessage}
+            </MessageBar>
+          ) : (
+            // show Calendar
+            // Test if is loading Events
+            <div>
+              {this.state.isloading ? (
+                <Spinner
+                  size={SpinnerSize.large}
+                  label={strings.LoadingEventsLabel}
+                />
+              ) : (
+                <div className={styles.container}>
+                  <MyCalendar
+                    dayPropGetter={this.dayPropGetter}
+                    localizer={localizer}
+                    selectable
+                    events={this.state.eventData}
+                    startAccessor="EventDate"
+                    endAccessor="EndDate"
+                    eventPropGetter={this.eventStyleGetter}
+                    onSelectSlot={this.onSelectSlot}
+                    components={{
+                      event: this.renderEvent,
+                    }}
+                    onSelectEvent={this.onSelectEvent}
+                    defaultDate={moment().startOf("day").toDate()}
+                    views={{
+                      day: true,
+                      week: true,
+                      month: true,
+                      agenda: true,
+                      work_week: Year,
+                    }}
+                    messages={{
+                      today: strings.todayLabel,
+                      previous: strings.previousLabel,
+                      next: strings.nextLabel,
+                      month: strings.monthLabel,
+                      week: strings.weekLabel,
+                      day: strings.dayLable,
+                      showMore: (total) => `+${total} ${strings.showMore}`,
+                      work_week: strings.yearHeaderLabel,
+                    }}
+                  />
                 </div>
-          }
-          {
-            this.state.showDialog &&
+              )}
+            </div>
+          )}
+          {this.state.showDialog && (
             <Event
               event={this.state.selectedEvent}
               panelMode={this.state.panelMode}
@@ -393,7 +497,7 @@ export default class Calendar extends React.Component<ICalendarProps, ICalendarS
               siteUrl={this.props.siteUrl}
               listId={this.props.list}
             />
-          }
+          )}
         </div>
       </Customizer>
     );
