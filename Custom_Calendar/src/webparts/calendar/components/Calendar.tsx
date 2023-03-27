@@ -60,6 +60,8 @@ import { IEventData } from "./../../../services/IEventData";
 import { IUserPermissions } from "./../../../services/IUserPermissions";
 import { MSGraphClient } from "@microsoft/sp-http";
 import * as MicrosoftGraph from "@microsoft/microsoft-graph-types";
+import { graph } from "@pnp/graph";
+
 //const localizer = BigCalendar.momentLocalizer(moment);
 const localizer = momentLocalizer(moment);
 /**
@@ -165,26 +167,64 @@ export default class Calendar extends React.Component<
       });
     }
   }
-
+  // ::::::::::
   public async loadOutlookEvents() {
-    this.context.msGraphClientFactory
+    this.props.context.msGraphClientFactory
       .getClient()
       .then((client: MSGraphClient) => {
         client
-          .api("me/events")
-          .version("v1.0")
-          .select("subject,organizer,start,end")
-          .get((error, response: any, rawResponse?: any) => {
-            if (error) {
-              console.log(error);
-              return;
-            }
-            const events: MicrosoftGraph.Event[] = response.value;
-            console.log(events);
+          .api("me/calendar/events")
+          .orderby("createdDateTime DESC")
+          .top(1)
+          .select("subject,start,end")
+          .get((err, res?: any) => {
+            console.log(res);
+
+            this.spService.AddOutlookEventstoList(res);
+            // let myevents = res.value;
+            // myevents.foreach((event) => {
+            //   this.props.context.msGraphClientFactory
+            //     .getClient()
+            //     .then((client: MSGraphClient) => {
+            //       client
+            //         .api("/sites/HRMS/lists/Events/items")
+            //         .post({
+            //           fields: {
+            //             Title: event.subject,
+            //             EventDate: event.start.datetime,
+            //             EndDate: event.end.dateTime,
+            //             Description: event.bodyPreview,
+            //           },
+            //         })
+            //         .then((res) => {
+            //           console.log("Event Added to Sharepoint:", res);
+            //         })
+            //         .catch((err) => {
+            //           console.log("Error adding in event:", err);
+            //         });
+            //     });
+            // });
           });
       });
-  }
 
+    // this.context.msGraphClientFactory
+    //   .getClient()
+    //   .then((client: MSGraphClient) => {
+    //     client
+    //       .api("me/events")
+    //       .version("v1.0")
+    //       .select("subject,organizer,start,end")
+    //       .get((error, response: any, rawResponse?: any) => {
+    //         if (error) {
+    //           console.log(error);
+    //           return;
+    //         }
+    //         const events: MicrosoftGraph.Event[] = response.value;
+    //         console.log(events);
+    //       });
+    //   });
+  }
+  // :::::::::::::::::::
   /**
    * @memberof Calendar
    */
@@ -192,6 +232,7 @@ export default class Calendar extends React.Component<
     this.setState({ isloading: true });
     await this.loadEvents();
     await this.loadOutlookEvents();
+    // await this.spService.AddOutlookEventstoList(this.context);
     this.setState({ isloading: false });
   }
 
