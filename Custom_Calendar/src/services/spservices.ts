@@ -6,10 +6,13 @@ import { sp, Web, PermissionKind, RegionalSettings } from "@pnp/sp";
 import { graph } from "@pnp/graph";
 import * as $ from "jquery";
 import { IEventData } from "./IEventData";
-import * as moment from "moment";
+import moment from "moment-timezone";
 import { SiteUser } from "@pnp/sp/src/siteusers";
 import { IUserPermissions } from "./IUserPermissions";
 import parseRecurrentEvent from "./parseRecurrentEvent";
+import { MSGraphClient } from "@microsoft/sp-http";
+import { Client } from "@microsoft/microsoft-graph-client";
+import { any } from "prop-types";
 
 // Class Services
 export default class spservices {
@@ -71,6 +74,72 @@ export default class spservices {
     }
   };
 
+  // public loadoutlookEvents = async (context: any) => {
+  //   try {
+  //     const client = await context.MSGraphClientFactory.getClient();
+  //     const events=await client.api
+  //   } catch (error) {
+  //     return Promise.reject(error);
+  //   }
+  // };
+
+  public async AddOutlookEventstoList(events) {
+    events.value.forEach(async (event) => {
+      console.log("Subject  'Before Added:' ", event.subject);
+      console.log("Event Data: ", event);
+      let startDate = moment.tz(event.start.dateTime, "Asia/Kolkata");
+      console.log("Start Date: ", startDate);
+      let endDate = moment.tz(event.start.endDate, "Asia/Kolkata");
+      console.log("End Date: ", endDate);
+      // try {
+      //   await sp.web.lists.getByTitle("Events").items.add({
+      //     Title: event.subject,
+      //     EventDate: startDate,
+      //     EndDate: endDate,
+      //     Description: event.bodyPreview,
+      //   });
+      //   console.log(`Event '${event.subject}' added to SharePoint list.`);
+      // } catch (error) {
+      //   console.log(
+      //     `Error adding event '${event.subject}' to SharePoint list: ${error}`
+      //   );
+      // }
+    });
+
+    // for (const event of events) {
+    //   console.log(event)
+    //   try {
+    //     await sp.web.lists.getByTitle("Events").items.add({
+    //       Title: event.subject,
+    //       EventDate: event.start.dateTime,
+    //       EndDate: event.end.dateTime,
+    //       Description: event.bodyPreview,
+    //     });
+    //     console.log(`Event '${event.subject}' added to SharePoint list.`);
+    //   } catch (error) {
+    //     console.log(
+    //       `Error adding event '${event.subject}' to SharePoint list: ${error}`
+    //     );
+    //   }
+    // }
+
+    // console.log(res);
+    // console.log(res.start.dateTime);
+    // sp.web.lists
+    //   .getByTitle("Events")
+    //   .items.add({
+    //     Title: res.subject,
+    //     EventDate: res.start.dateTime,
+    //     EndDate: res.end.dateTime,
+    //     Description: res.bodyPreview,
+    //   })
+    //   .then((data) => {
+    //     console.log("Event is Added Successfully", data);
+    //   })
+    //   .catch((err) => {
+    //     console.log("Errro in adding event to list!", err);
+    //   });
+  }
   /**
    *
    * @param {IEventData} newEvent
