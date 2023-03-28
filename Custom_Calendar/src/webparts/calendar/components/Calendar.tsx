@@ -3,7 +3,7 @@ import styles from "./Calendar.module.scss";
 import { ICalendarProps } from "./ICalendarProps";
 import { ICalendarState } from "./ICalendarState";
 import { escape } from "@microsoft/sp-lodash-subset";
-import * as moment from "moment";
+import * as moment from "moment-timezone";
 import * as strings from "CalendarWebPartStrings";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 require("./calendar.css");
@@ -85,6 +85,7 @@ export default class Calendar extends React.Component<
       isloading: true,
       hasError: false,
       errorMessage: "",
+      sAllEvents: [],
     };
 
     this.onDismissPanel = this.onDismissPanel.bind(this);
@@ -169,41 +170,57 @@ export default class Calendar extends React.Component<
   }
   // ::::::::::
   public async loadOutlookEvents() {
+    let lAllEventsData = [],
+      lAllOptions = [],
+      NewArray = [],
+      array = [];
+    let index = 0;
     this.props.context.msGraphClientFactory
       .getClient()
       .then((client: MSGraphClient) => {
         client
           .api("me/calendar/events")
           .orderby("createdDateTime DESC")
-          .top(1)
-          .select("subject,start,end")
+          .top(5)
+          // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
-            console.log(res);
+            console.log("All Events: ", res);
 
-            this.spService.AddOutlookEventstoList(res);
-            // let myevents = res.value;
-            // myevents.foreach((event) => {
-            //   this.props.context.msGraphClientFactory
-            //     .getClient()
-            //     .then((client: MSGraphClient) => {
-            //       client
-            //         .api("/sites/HRMS/lists/Events/items")
-            //         .post({
-            //           fields: {
-            //             Title: event.subject,
-            //             EventDate: event.start.datetime,
-            //             EndDate: event.end.dateTime,
-            //             Description: event.bodyPreview,
-            //           },
-            //         })
-            //         .then((res) => {
-            //           console.log("Event Added to Sharepoint:", res);
-            //         })
-            //         .catch((err) => {
-            //           console.log("Error adding in event:", err);
-            //         });
-            //     });
-            // });
+            // this.spService.AddOutlookEventstoList(res);
+
+            res.value.forEach(async (element, i) => {
+              console.log("Events: ", element);
+              index = i;
+              console.log(element.subject);
+              const timezone = "Asia/Kolkata";
+              console.log("sD before format", element.start.dateTime);
+              let startDate = moment
+                .utc(element.start.dateTime)
+                .tz(timezone)
+                .format("YYYY-MM-DD[T]HH:mm:ss");
+              console.log(startDate);
+
+              let endDate = moment
+                .utc(element.end.dateTime)
+                .tz(timezone)
+                .format("YYYY-MM-DD[T]HH:mm:ss");
+
+              lAllEventsData.push({
+                id: element.id,
+                subject: element.subject,
+                EventDate: startDate,
+                EndDate: endDate,
+                isAllDay: element.isAllDay,
+                attendees: element.attendees,
+                categories: element.categories,
+                recurrence: element.recurrence,
+                type: element.type,
+                iCalUId: element.iCalUId,
+                ownerName: element.organizer.emailAddress.name,
+                location: element.location.displayName,
+              });
+            });
+            this.setState({ sAllEvents: lAllEventsData });
           });
       });
 
@@ -276,7 +293,7 @@ export default class Calendar extends React.Component<
   }
   /**
    * @private
-   * @param {*} { event }
+   * @param { event }
    * @returns
    * @memberof Calendar
    */
@@ -303,6 +320,7 @@ export default class Calendar extends React.Component<
     /**
      * @returns {JSX.Element}
      */
+
     const onRenderPlainCard = (): JSX.Element => {
       return (
         <div className={styles.plainCard}>
@@ -494,7 +512,8 @@ export default class Calendar extends React.Component<
                     dayPropGetter={this.dayPropGetter}
                     localizer={localizer}
                     selectable
-                    events={this.state.eventData}
+                    // events={this.state.eventData}
+                    events={this.state.sAllEvents}
                     startAccessor="EventDate"
                     endAccessor="EndDate"
                     eventPropGetter={this.eventStyleGetter}

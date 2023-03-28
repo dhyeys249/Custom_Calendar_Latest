@@ -822,7 +822,6 @@ export class Event extends React.Component<IEventProps, IEventState> {
     //   .getClient()
     //   .then((client: MSGraphClient) => {
     //     client.api("me/events").post(event);
-
     //   })
     //   .then(() => {
     //     console.log("Event Added");

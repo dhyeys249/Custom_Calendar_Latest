@@ -85,25 +85,38 @@ export default class spservices {
 
   public async AddOutlookEventstoList(events) {
     events.value.forEach(async (event) => {
-      console.log("Subject  'Before Added:' ", event.subject);
+      // console.log("Subject  'Before Added:' ", event.subject);
       console.log("Event Data: ", event);
-      let startDate = moment.tz(event.start.dateTime, "Asia/Kolkata");
-      console.log("Start Date: ", startDate);
-      let endDate = moment.tz(event.start.endDate, "Asia/Kolkata");
-      console.log("End Date: ", endDate);
-      // try {
-      //   await sp.web.lists.getByTitle("Events").items.add({
-      //     Title: event.subject,
-      //     EventDate: startDate,
-      //     EndDate: endDate,
-      //     Description: event.bodyPreview,
-      //   });
-      //   console.log(`Event '${event.subject}' added to SharePoint list.`);
-      // } catch (error) {
-      //   console.log(
-      //     `Error adding event '${event.subject}' to SharePoint list: ${error}`
-      //   );
-      // }
+      const timezone = "Asia/Kolkata";
+      // Formatting of startDate
+      let startDate = moment
+        .utc(event.start.dateTime)
+        .tz(timezone)
+        .format("YYYY-MM-DD[T]HH:mm:ss");
+      // console.log("startDate:", startDate);
+      // Formatting of endDate
+      let endDate = moment
+        .utc(event.end.dateTime)
+        .tz(timezone)
+        .format("YYYY-MM-DD[T]HH:mm:ss");
+      // console.log("endDate: ", endDate);
+
+      // Attendees
+      console.log("Organizers: ", event.attendees.emailAddress.name);
+      try {
+        await sp.web.lists.getByTitle("Events").items.add({
+          Title: event.subject,
+          EventDate: startDate,
+          EndDate: endDate,
+          Description: event.bodyPreview,
+          ParticipantsPicker: event.attendees.emailAddress.name,
+        });
+        console.log(`Event '${event.subject}' added to SharePoint list.`);
+      } catch (error) {
+        console.log(
+          `Error adding event '${event.subject}' to SharePoint list: ${error}`
+        );
+      }
     });
 
     // for (const event of events) {
