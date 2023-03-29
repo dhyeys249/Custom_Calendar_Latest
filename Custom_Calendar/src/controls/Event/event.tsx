@@ -51,6 +51,7 @@ import {
 import { Web } from "@pnp/sp";
 // import { graph } from "@pnp/graph";
 import "@pnp/graph/users";
+import Calendar from "../../webparts/calendar/components/Calendar";
 
 const format = require("string-format");
 
@@ -611,148 +612,32 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
   // ::::::: Edited By @Dhyey Sojitra ::::::::
   public async addOutlookEvent() {
-    // let index = 0;
-    // let aadTokenProvider =
-    //   await this.props.context.aadTokenProviderFactory.getTokenProvider();
-    // let token = await aadTokenProvider.getToken("https://graph.microsoft.com");
-    // console.log(token);
-
-    // const client = Client.init(options);
-
+    // Getting Current User
     let CurrentUser;
     sp.web.currentUser
       .get()
       .then((user) => {
         CurrentUser = user.Id;
-        // console.log("CurrentUser: " + CurrentUser);
       })
       .catch((error) => {
         console.log(`Error in getting current user: ${error}`);
       });
 
+    //StartDate Formatting
     let StartDate = moment(this.state.eventData.EventDate).format(
       "YYYY-MM-DDTHH:mm:ss"
     );
+
+    // EndDate Formatting
     let EndDate = moment(this.state.eventData.EndDate).format(
       "YYYY-MM-DDTHH:mm:ss"
     );
-
     let Subject = this.state.eventData.title;
     // let Location = this.state.eventData.location;
     let Attendees = this.state.eventData.attendes;
-    // console.log("Attendees in Event: " + Attendees);
-    // let user = Attendees[0];
-    // console.log("USer 1: " + user);
-    // const web = new Web(this.props.siteUrl);
 
-    // console.log("Site Url:" + web);
-    // const no2 = await sp.web.siteUsers.getById(user)();
-    // sp.web.siteUsers.getById(user);
-    // const no1 = await graph.users.getById(user)();
-    // console.log(no2);
-
-    // await this.spService
-    //   .getnames(Attendees)
-    //   .then((userdata) => {
-    //     console.log(userdata.Title);
-    //     console.log(userdata.Email);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
-
-    // await Promise.all(
-    //   Attendees.map((attendee) =>
-    //     this.spService
-    //       .getnames(attendee)
-    //       .then((userData) => {
-    //         console.log("User Name: " + userData.Title);
-    //         console.log("User Email: " + userData.Email);
-    //       })
-    //       .catch((err) => {
-    //         console.log(err);
-    //       })
-    //   )
-    // );
-
-    // await Promise.all(Attendees.map((user) => this.spService.getnames(user)))
-    //   .then((userData) => {
-    //     console.log("Name: " + userData.Title);
-    //   })
-    //   .catch((err) => {
-    //     console.log("Error Fetching User data: " + err);
-    //   });
-
-    // console.log(StartDate);
-    // console.log(EndDate);
-    // console.log(Attendees);
-
-    // await graph.users
-    //   .getById(CurrentUserEmail)
-    //   .calendar.events.add({
-    //     subject: Subject,
-    //     body: {
-    //       contentType: "html",
-    //       content: "New Event is been Created :)",
-    //     },
-    //     start: {
-    //       dateTime: StartDate,
-    //       timeZone: "GMT Standard Time",
-    //     },
-    //     end: {
-    //       dateTime: EndDate,
-    //       timeZone: "GMT Standard Time",
-    //     },
-    //     location: {
-    //       displayName: Location,
-    //     },
-    //     attendees: Attendees,
-    //     // [
-    //     //     {
-    //     //         "emailAddress": {
-    //     //             "address": data.UserEmail[0],
-    //     //             "name": data.UserEmail[0]
-    //     //         },
-    //     //         "type": "required"
-    //     //     }
-    //     // ]
-    //   })
-    //   .then(async (event) => {
-    //     // alert('Event Created');
-    //     console.log(event);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //     // if (err.status == 429) {
-    //     //     this.reCreateEvents(data, ArrayOfAttendees, CurrentUser)
-    //     // }
-    //   });
-
-    // ::::  Using /me/events  ::::
-    // console.log("Event Data: " + this.state.eventData);
-
-    // let ArrayofAttendees = await Promise.all(
-    //   Attendees.map((attendee) =>
-    //     this.spService
-    //       .getnames(attendee)
-    //       .then((userData) => {
-    //         console.log("User Name: " + userData.Title);
-    //         console.log("User Email: " + userData.Email);
-    //         return {
-    //           emailAddress: {
-    //             address: userData.Email,
-    //             name: userData.Title,
-    //           },
-    //           type: "required",
-    //         };
-    //       })
-    //       .catch((err) => {
-    //         console.log(err);
-    //       })
-    //   )
-    // );
+    // Getting all attendees name & email in ArrayofAttendees in json format
     let ArrayofAttendees = [];
-
     for (const attendee of Attendees) {
       try {
         const userData = await this.spService.getnames(attendee);
@@ -769,30 +654,9 @@ export class Event extends React.Component<IEventProps, IEventState> {
         console.log(err);
       }
     }
+    // console.log(ArrayofAttendees);
 
-    // if (Attendees.length > 0) {
-    //   Attendees.map(async (data) => {
-    //     await this.spService
-    //       .getnames(data)
-    //       .then((names) => {
-    //         console.log(names);
-    //         ArrayofAttendees.push({
-    //           emailAddress: {
-    //             address: names.Email,
-    //             name: names.Title,
-    //           },
-    //           type: "required",
-    //         });
-    //       })
-    //       .catch((err) => {
-    //         console.log(err);
-    //       });
-    //   });
-    //   console.log(ArrayofAttendees);
-    // }
-
-    // let attendee = [ArrayofAttendees];
-
+    // creating event in Json
     const event = {
       subject: Subject,
       body: {
@@ -813,38 +677,29 @@ export class Event extends React.Component<IEventProps, IEventState> {
       // transactionId: "7E163156-7762-4BEB-A1C6-729EA81755A7",
     };
 
-    console.log("Event Data in Json Format:" + JSON.stringify(event));
+    // console.log("Event Data in Json Format:" + JSON.stringify(event));
     // console.log("Event Data: " + this.state.eventData);
 
     // :::: Tested Working ::::
 
-    // await this.props.context.msGraphClientFactory
-    //   .getClient()
-    //   .then((client: MSGraphClient) => {
-    //     client.api("me/events").post(event);
-    //   })
-    //   .then(() => {
-    //     console.log("Event Added");
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
+    await this.props.context.msGraphClientFactory
+      .getClient()
+      .then((client: MSGraphClient) => {
+        client.api("me/events").post(event);
+      })
+      .then(() => {
+        console.log("Event Added");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    // :::::::::::
 
+    // refreshing calender again
+    const calendar = new Calendar(this.context);
+    calendar.loadOutlookEvents();
+    // await this.Calendar.loadOutlookEvents();
     // ::::::::::::::::::::
-
-    // client
-    //   .api("/me/events")
-    //   .post(event)
-    //   .then((result) => {
-    //     console.log("Event added:", result);
-    //   })
-    //   .catch((error) => {
-    //     console.error("Error adding event:", error);
-    //   });
-
-    // Client.api("/me/events").post(event, (err, res) => {
-    //   console.log(res);
-    // });
   }
 
   // :::::::::::::::::::

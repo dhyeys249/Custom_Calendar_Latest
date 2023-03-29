@@ -61,6 +61,7 @@ import { IUserPermissions } from "./../../../services/IUserPermissions";
 import { MSGraphClient } from "@microsoft/sp-http";
 import * as MicrosoftGraph from "@microsoft/microsoft-graph-types";
 import { graph } from "@pnp/graph";
+import { Views } from "@pnp/sp";
 
 //const localizer = BigCalendar.momentLocalizer(moment);
 const localizer = momentLocalizer(moment);
@@ -73,6 +74,15 @@ export default class Calendar extends React.Component<
   ICalendarProps,
   ICalendarState
 > {
+  handleShowMore = (events, date, view) => {
+    if (view === "day") {
+      console.log(`Showing more events for date ${date} in the day view`);
+      // Do something with the day view
+    } else {
+      console.log(`Showing more events in the ${view} view`);
+      // Handle other views
+    }
+  };
   private spService: spservices = null;
   private userListPermissions: IUserPermissions = undefined;
   public constructor(props) {
@@ -181,24 +191,24 @@ export default class Calendar extends React.Component<
         client
           .api("me/calendar/events")
           .orderby("createdDateTime DESC")
-          .top(5)
+          .top(1000)
           // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
-            console.log("All Events: ", res);
+            // console.log("All Events: ", res);
 
             // this.spService.AddOutlookEventstoList(res);
 
             res.value.forEach(async (element, i) => {
-              console.log("Events: ", element);
+              // console.log("Events: ", element);
               index = i;
-              console.log(element.subject);
+              // console.log(element.subject);
               const timezone = "Asia/Kolkata";
-              console.log("sD before format", element.start.dateTime);
+              // console.log("sD before format", element.start.dateTime);
               let startDate = moment
                 .utc(element.start.dateTime)
                 .tz(timezone)
                 .format("YYYY-MM-DD[T]HH:mm:ss");
-              console.log(startDate);
+              // console.log(startDate);
 
               let endDate = moment
                 .utc(element.end.dateTime)
@@ -207,9 +217,12 @@ export default class Calendar extends React.Component<
 
               lAllEventsData.push({
                 id: element.id,
-                subject: element.subject,
+                title: element.subject,
                 EventDate: startDate,
+                start: startDate,
+                end: endDate,
                 EndDate: endDate,
+                resource: element.attendees,
                 isAllDay: element.isAllDay,
                 attendees: element.attendees,
                 categories: element.categories,
@@ -219,6 +232,8 @@ export default class Calendar extends React.Component<
                 ownerName: element.organizer.emailAddress.name,
                 location: element.location.displayName,
               });
+              // console.log("Attendees: ", element.attendees);
+              // console.log("Categories: ", element.categories);
             });
             this.setState({ sAllEvents: lAllEventsData });
           });
@@ -518,9 +533,11 @@ export default class Calendar extends React.Component<
                     endAccessor="EndDate"
                     eventPropGetter={this.eventStyleGetter}
                     onSelectSlot={this.onSelectSlot}
+                    // onShowMore={this.handleShowMore}
                     components={{
                       event: this.renderEvent,
                     }}
+                    // defaultView={"week"}
                     onSelectEvent={this.onSelectEvent}
                     defaultDate={moment().startOf("day").toDate()}
                     views={{
@@ -540,6 +557,11 @@ export default class Calendar extends React.Component<
                       showMore: (total) => `+${total} ${strings.showMore}`,
                       work_week: strings.yearHeaderLabel,
                     }}
+
+                    // onShowMore={(events, date, view) => {
+                    //   if (view === "month") {
+                    //   }
+                    // }}
                   />
                 </div>
               )}

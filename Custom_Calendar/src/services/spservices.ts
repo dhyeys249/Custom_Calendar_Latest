@@ -104,7 +104,7 @@ export default class spservices {
       // Attendees
       console.log("Organizers: ", event.attendees.emailAddress.name);
       try {
-        await sp.web.lists.getByTitle("Events").items.add({
+        await sp.web.lists.getByTitle("Schedule%20Interview").items.add({
           Title: event.subject,
           EventDate: startDate,
           EndDate: endDate,
