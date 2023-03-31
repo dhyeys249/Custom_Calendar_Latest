@@ -27,7 +27,6 @@
     "@types/draft-js": "^0.10.30",
     "@types/globalize": "0.0.34",
     "@types/jquery": "^3.3.29",
-    "@types/react-big-calendar": "^0.24.6",
     "@uifabric/fluent-theme": "^0.16.7",
     "browserslist": "^4.12.0",
     "draft-js": "^0.10.5",

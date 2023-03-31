@@ -14,6 +14,8 @@ export interface IEventState {
   endDate?: Date;
   editorState?: any;
   selectedUsers: string[];
+  // locationLatitude: number;
+  // locationLongitude: number;
   errorMessage?: string;
   hasError?: boolean;
   disableButton?: boolean;

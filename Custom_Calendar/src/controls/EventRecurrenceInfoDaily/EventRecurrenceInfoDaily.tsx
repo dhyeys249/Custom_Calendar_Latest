@@ -1,27 +1,73 @@
-import * as React from 'react';
-import styles from './EventRecurrenceInfoDaily.module.scss';
-import * as strings from 'CalendarWebPartStrings';
-import { IEventRecurrenceInfoDailyProps } from './IEventRecurrenceInfoDailyProps';
-import { IEventRecurrenceInfoDailyState } from './IEventRecurrenceInfoDailyState';
-import { escape } from '@microsoft/sp-lodash-subset';
-import * as moment from 'moment';
+import * as React from "react";
+import styles from "./EventRecurrenceInfoDaily.module.scss";
+import * as strings from "CalendarWebPartStrings";
+import { IEventRecurrenceInfoDailyProps } from "./IEventRecurrenceInfoDailyProps";
+import { IEventRecurrenceInfoDailyState } from "./IEventRecurrenceInfoDailyState";
+import { escape } from "@microsoft/sp-lodash-subset";
+import * as moment from "moment";
 import { parseString, Builder } from "xml2js";
 import {
   ChoiceGroup,
   IChoiceGroupOption,
   Label,
   MaskedTextField,
-} from 'office-ui-fabric-react';
-import { DatePicker, DayOfWeek, IDatePickerStrings } from 'office-ui-fabric-react/lib/DatePicker';
-import { toLocaleShortDateString } from '../../utils/dateUtils';
+} from "office-ui-fabric-react";
+import {
+  DatePicker,
+  DayOfWeek,
+  IDatePickerStrings,
+} from "office-ui-fabric-react/lib/DatePicker";
+import { toLocaleShortDateString } from "../../utils/dateUtils";
 
-import spservices from '../../services/spservices';
+import spservices from "../../services/spservices";
 
 const DayPickerStrings: IDatePickerStrings = {
-  months: [strings.January, strings.February, strings.March, strings.April, strings.May, strings.June, strings.July, strings.August, strings.September, strings.October, strings.November, strings.December],
-  shortMonths: [strings.Jan, strings.Feb, strings.Mar, strings.Apr, strings.May, strings.Jun, strings.Jul, strings.Aug, strings.Sep, strings.Oct, strings.Nov, strings.Dez],
-  days: [strings.Sunday, strings.Monday, strings.Tuesday, strings.Wednesday, strings.Thursday, strings.Friday, strings.Saturday],
-  shortDays: [strings.ShortDay_S, strings.ShortDay_M, strings.ShortDay_T, strings.ShortDay_W, strings.ShortDay_Thursday, strings.ShortDay_Friday, strings.ShortDay_Sunday],
+  months: [
+    strings.January,
+    strings.February,
+    strings.March,
+    strings.April,
+    strings.May,
+    strings.June,
+    strings.July,
+    strings.August,
+    strings.September,
+    strings.October,
+    strings.November,
+    strings.December,
+  ],
+  shortMonths: [
+    strings.Jan,
+    strings.Feb,
+    strings.Mar,
+    strings.Apr,
+    strings.May,
+    strings.Jun,
+    strings.Jul,
+    strings.Aug,
+    strings.Sep,
+    strings.Oct,
+    strings.Nov,
+    strings.Dez,
+  ],
+  days: [
+    strings.Sunday,
+    strings.Monday,
+    strings.Tuesday,
+    strings.Wednesday,
+    strings.Thursday,
+    strings.Friday,
+    strings.Saturday,
+  ],
+  shortDays: [
+    strings.ShortDay_S,
+    strings.ShortDay_M,
+    strings.ShortDay_T,
+    strings.ShortDay_W,
+    strings.ShortDay_Thursday,
+    strings.ShortDay_Friday,
+    strings.ShortDay_Sunday,
+  ],
   goToToday: strings.GoToDay,
   prevMonthAriaLabel: strings.PrevMonth,
   nextMonthAriaLabel: strings.NextMonth,
@@ -39,33 +85,38 @@ const DayPickerStrings: IDatePickerStrings = {
  * @class EventRecurrenceInfoDaily
  * @extends {React.Component<IEventRecurrenceInfoDailyProps, IEventRecurrenceInfoDailyState>}
  */
-export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceInfoDailyProps, IEventRecurrenceInfoDailyState> {
+export class EventRecurrenceInfoDaily extends React.Component<
+  IEventRecurrenceInfoDailyProps,
+  IEventRecurrenceInfoDailyState
+> {
   private spService: spservices = null;
   public constructor(props) {
     super(props);
 
-
     this.onPatternChange = this.onPatternChange.bind(this);
     this.state = {
-      selectedKey: 'daily',
-      selectPatern: 'every',
-      startDate: this.props.startDate ? this.props.startDate : moment().toDate(),
-      endDate: moment().endOf('month').toDate(),
-      numberOcurrences: '1',
-      numberOfDays: '1',
+      selectedKey: "daily",
+      selectPatern: "every",
+      startDate: this.props.startDate
+        ? this.props.startDate
+        : moment().toDate(),
+      endDate: moment().endOf("month").toDate(),
+      numberOcurrences: "1",
+      numberOfDays: "1",
       disableNumberOfDays: false,
       disableNumberOcurrences: true,
-      selectdateRangeOption: 'noDate',
+      selectdateRangeOption: "noDate",
       disableEndDate: true,
-      selectedRecurrenceRule: 'daily',
+      selectedRecurrenceRule: "daily",
       isLoading: false,
-      errorMessageNumberOcurrences: '',
-      errorMessageNumberOfDays: '',
+      errorMessageNumberOcurrences: "",
+      errorMessageNumberOfDays: "",
     };
 
     //
     this.onNumberOfDaysChange = this.onNumberOfDaysChange.bind(this);
-    this.onNumberOfOcurrencesChange = this.onNumberOfOcurrencesChange.bind(this);
+    this.onNumberOfOcurrencesChange =
+      this.onNumberOfOcurrencesChange.bind(this);
     this.onDataRangeOptionChange = this.onDataRangeOptionChange.bind(this);
     this.onEndDateChange = this.onEndDateChange.bind(this);
     this.onStartDateChange = this.onStartDateChange.bind(this);
@@ -81,8 +132,8 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    * @param {Date} date
    * @memberof EventRecurrenceInfoDaily
    */
-   private onStartDateChange(date: Date) {
-    //Put the applyRecurrence() function in the callback of the setState() method to make sure that applyRecurrence() applied after the state change is complete. 
+  private onStartDateChange(date: Date) {
+    //Put the applyRecurrence() function in the callback of the setState() method to make sure that applyRecurrence() applied after the state change is complete.
     this.setState({ startDate: date }, () => {
       this.applyRecurrence();
     });
@@ -95,9 +146,9 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    * @param {Date} date
    * @memberof EventRecurrenceInfoDaily
    */
-   private onEndDateChange(date: Date) {
+  private onEndDateChange(date: Date) {
     //Put the applyRecurrence() function in the callback of the setState() method to make sure that applyRecurrence() applied after the state change is complete.
-      this.setState({ endDate: date}, () => {
+    this.setState({ endDate: date }, () => {
       this.applyRecurrence();
     });
   }
@@ -110,21 +161,24 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    * @param {string} value
    * @memberof EventRecurrenceInfoDaily
    */
-  private onNumberOfDaysChange(ev: React.SyntheticEvent<HTMLElement>, value: string) {
+  private onNumberOfDaysChange(
+    ev: React.SyntheticEvent<HTMLElement>,
+    value: string
+  ) {
     ev.preventDefault();
-    let errorMessage = '';
+    let errorMessage = "";
     setTimeout(() => {
-
       if (Number(value.trim()) == 0 || Number(value.trim()) > 255) {
-        value = '1  ';
-        errorMessage = 'Allowed values 1 to 255';
+        value = "1  ";
+        errorMessage = "Allowed values 1 to 255";
       }
-      this.setState({ numberOfDays: value, errorMessageNumberOfDays: errorMessage  });
+      this.setState({
+        numberOfDays: value,
+        errorMessageNumberOfDays: errorMessage,
+      });
       this.applyRecurrence();
     }, 2500);
-
   }
-
 
   /**
    *
@@ -134,19 +188,23 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    * @param {string} value
    * @memberof EventRecurrenceInfoDaily
    */
-  private onNumberOfOcurrencesChange(ev: React.SyntheticEvent<HTMLElement>, value: string) {
+  private onNumberOfOcurrencesChange(
+    ev: React.SyntheticEvent<HTMLElement>,
+    value: string
+  ) {
     ev.preventDefault();
-    let errorMessage = '';
+    let errorMessage = "";
     setTimeout(() => {
-
       if (Number(value.trim()) == 0 || Number(value.trim()) > 999) {
-        value = '1  ';
-        errorMessage = 'Allowed values 1 to 999';
+        value = "1  ";
+        errorMessage = "Allowed values 1 to 999";
       }
-      this.setState({  numberOcurrences: value , errorMessageNumberOcurrences: errorMessage  });
+      this.setState({
+        numberOcurrences: value,
+        errorMessageNumberOcurrences: errorMessage,
+      });
       this.applyRecurrence();
     }, 2500);
-
   }
 
   /**
@@ -157,7 +215,7 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    * @param {IChoiceGroupOption} option
    * @memberof EventRecurrenceInfoDaily
    */
-   private onDataRangeOptionChange(
+  private onDataRangeOptionChange(
     ev: React.SyntheticEvent<HTMLElement>,
     option: IChoiceGroupOption
   ): void {
@@ -174,7 +232,7 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
       }
     );
   }
-  
+
   private onPatternChange(
     ev: React.SyntheticEvent<HTMLElement>,
     option: IChoiceGroupOption
@@ -197,74 +255,84 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
     await this.load();
   }
 
-
-  public async  componentDidUpdate(prevProps: IEventRecurrenceInfoDailyProps, prevState: IEventRecurrenceInfoDailyState) {
-
-  }
+  public async componentDidUpdate(
+    prevProps: IEventRecurrenceInfoDailyProps,
+    prevState: IEventRecurrenceInfoDailyState
+  ) {}
 
   private async load() {
     let patern: any = {};
-    let dateRange: { repeatForever?: string, repeatInstances?: string, windowEnd?: Date } = {};
-    let dailyPatern: { dayFrequency?: string, weekDay?: string } = {};
+    let dateRange: {
+      repeatForever?: string;
+      repeatInstances?: string;
+      windowEnd?: Date;
+    } = {};
+    let dailyPatern: { dayFrequency?: string; weekDay?: string } = {};
     let recurrenceRule: string;
 
     if (this.props.recurrenceData) {
+      parseString(
+        this.props.recurrenceData,
+        { explicitArray: false },
+        (error, result) => {
+          if (result.recurrence.rule.repeat) {
+            patern = result.recurrence.rule.repeat;
+          }
 
-      parseString(this.props.recurrenceData, { explicitArray: false }, (error, result) => {
-
-        if (result.recurrence.rule.repeat) {
-          patern = result.recurrence.rule.repeat;
+          //
+          if (result.recurrence.rule.repeatForever) {
+            dateRange = { repeatForever: result.recurrence.rule.repeatForever };
+          }
+          if (result.recurrence.rule.repeatInstances) {
+            dateRange = {
+              repeatInstances: result.recurrence.rule.repeatInstances,
+            };
+          }
+          if (result.recurrence.rule.windowEnd) {
+            dateRange = { windowEnd: result.recurrence.rule.windowEnd };
+          }
         }
-
-        //
-        if (result.recurrence.rule.repeatForever) {
-          dateRange = { repeatForever: result.recurrence.rule.repeatForever };
-        }
-        if (result.recurrence.rule.repeatInstances) {
-          dateRange = { repeatInstances: result.recurrence.rule.repeatInstances };
-        }
-        if (result.recurrence.rule.windowEnd) {
-          dateRange = { windowEnd: result.recurrence.rule.windowEnd };
-        }
-
-      });
+      );
       // daily Patern
       if (patern.daily) {
-        recurrenceRule = 'daily';
+        recurrenceRule = "daily";
         if (patern.daily.$.dayFrequency) {
           dailyPatern = { dayFrequency: patern.daily.$.dayFrequency };
         }
         if (patern.daily.$.weekday) {
-          dailyPatern = { weekDay: 'weekDay' };
+          dailyPatern = { weekDay: "weekDay" };
         }
       }
 
-      let selectDateRangeOption: string = 'noDate';
+      let selectDateRangeOption: string = "noDate";
       if (dateRange.repeatForever) {
-        selectDateRangeOption = 'noDate';
+        selectDateRangeOption = "noDate";
       } else if (dateRange.repeatInstances) {
-        selectDateRangeOption = 'endAfter';
+        selectDateRangeOption = "endAfter";
       } else if (dateRange.windowEnd) {
-        selectDateRangeOption = 'endDate';
+        selectDateRangeOption = "endDate";
       }
 
       // weekday patern
       this.setState({
         selectedRecurrenceRule: recurrenceRule,
-        selectPatern: dailyPatern.dayFrequency ? 'every' : 'everweekday',
-        numberOfDays: dailyPatern.dayFrequency ? dailyPatern.dayFrequency : '1',
+        selectPatern: dailyPatern.dayFrequency ? "every" : "everweekday",
+        numberOfDays: dailyPatern.dayFrequency ? dailyPatern.dayFrequency : "1",
         disableNumberOfDays: dailyPatern.dayFrequency ? false : true,
         selectdateRangeOption: selectDateRangeOption,
-        numberOcurrences: dateRange.repeatInstances ? dateRange.repeatInstances : '10',
+        numberOcurrences: dateRange.repeatInstances
+          ? dateRange.repeatInstances
+          : "10",
         disableNumberOcurrences: dateRange.repeatInstances ? false : true,
-        endDate: dateRange.windowEnd ? new Date(moment(dateRange.windowEnd).format('YYYY/MM/DD')) : this.state.endDate,
+        endDate: dateRange.windowEnd
+          ? new Date(moment(dateRange.windowEnd).format("YYYY/MM/DD"))
+          : this.state.endDate,
         disableEndDate: dateRange.windowEnd ? false : true,
         isLoading: false,
       });
     }
     await this.applyRecurrence();
   }
-
 
   private async onApplyRecurrence(ev: React.MouseEvent<HTMLButtonElement>) {
     await this.applyRecurrence();
@@ -280,21 +348,26 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
     const endDate = await this.spService.getUtcTime(this.state.endDate);
     let selectDateRangeOption;
     switch (this.state.selectdateRangeOption) {
-      case 'noDate':
+      case "noDate":
         selectDateRangeOption = `<repeatForever>FALSE</repeatForever>`;
         break;
-      case 'endAfter':
+      case "endAfter":
         selectDateRangeOption = `<repeatInstances>${this.state.numberOcurrences}</repeatInstances>`;
         break;
-      case 'endDate':
+      case "endDate":
         selectDateRangeOption = `<windowEnd>${endDate}</windowEnd>`;
         break;
       default:
         break;
     }
-    const recurrenceXML = `<recurrence><rule><firstDayOfWeek>su</firstDayOfWeek><repeat>` +
-      `<daily ${ this.state.selectPatern === 'every' ? `dayFrequency="${this.state.numberOfDays.trim()}"/>` : 'weekday'}</repeat>${selectDateRangeOption}</rule></recurrence>`;
-  //  console.log(recurrenceXML);
+    const recurrenceXML =
+      `<recurrence><rule><firstDayOfWeek>su</firstDayOfWeek><repeat>` +
+      `<daily ${
+        this.state.selectPatern === "every"
+          ? `dayFrequency="${this.state.numberOfDays.trim()}"/>`
+          : "weekday"
+      }</repeat>${selectDateRangeOption}</rule></recurrence>`;
+    //  console.log(recurrenceXML);
     this.props.returnRecurrenceData(this.state.startDate, recurrenceXML);
   }
   /**
@@ -305,53 +378,83 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
    */
   public render(): React.ReactElement<IEventRecurrenceInfoDailyProps> {
     return (
-      <div >
+      <div>
         {
           <div>
-            <div style={{ display: 'inline-block', float: 'right', paddingTop: '10px', height: '40px' }}>
-
-            </div>
-            <div style={{ width: '100%', paddingTop: '10px' }}>
-              <Label>{ strings.patternLabel }</Label>
+            <div
+              style={{
+                display: "inline-block",
+                float: "right",
+                paddingTop: "10px",
+                height: "40px",
+              }}
+            ></div>
+            <div style={{ width: "100%", paddingTop: "10px" }}>
+              <Label>{strings.patternLabel}</Label>
               <ChoiceGroup
                 selectedKey={this.state.selectPatern}
                 options={[
                   {
-                    key: 'every',
+                    key: "every",
                     text: strings.every,
-                    ariaLabel: 'every',
+                    ariaLabel: "every",
 
                     onRenderField: (props, render) => {
                       return (
-                        <div  >
+                        <div>
                           {render!(props)}
                           <MaskedTextField
-                            styles={{ root: { display: 'inline-block', verticalAlign: 'top', width: '100px', paddingLeft: '10px' } }}
+                            styles={{
+                              root: {
+                                display: "inline-block",
+                                verticalAlign: "top",
+                                width: "100px",
+                                paddingLeft: "10px",
+                              },
+                            }}
                             mask="999"
-                            maskChar=' '
+                            maskChar=" "
                             disabled={this.state.disableNumberOfDays}
                             value={this.state.numberOfDays}
                             errorMessage={this.state.errorMessageNumberOfDays}
-                            onChange={this.onNumberOfDaysChange} />
-                          <Label styles={{ root: { display: 'inline-block', verticalAlign: 'top', width: '60px', paddingLeft: '10px' } }}>{strings.days}</Label>
+                            onChange={this.onNumberOfDaysChange}
+                          />
+                          <Label
+                            styles={{
+                              root: {
+                                display: "inline-block",
+                                verticalAlign: "top",
+                                width: "60px",
+                                paddingLeft: "10px",
+                              },
+                            }}
+                          >
+                            {strings.days}
+                          </Label>
                         </div>
                       );
-                    }
+                    },
                   },
                   {
-                    key: 'everweekday',
+                    key: "everweekday",
                     text: strings.everyweekdays,
-                  }
+                  },
                 ]}
                 onChange={this.onPatternChange}
                 required={true}
               />
             </div>
 
-            <div style={{ paddingTop: '22px' }}>
-              <Label>{ strings.dateRangeLabel }</Label>
-              <div style={{ display: 'inline-block', verticalAlign: 'top', paddingRight: '35px', paddingTop: '10px' }}>
-
+            <div style={{ paddingTop: "22px" }}>
+              <Label>{strings.dateRangeLabel}</Label>
+              <div
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "top",
+                  paddingRight: "35px",
+                  paddingTop: "10px",
+                }}
+              >
                 <DatePicker
                   firstDayOfWeek={DayOfWeek.Sunday}
                   strings={DayPickerStrings}
@@ -362,59 +465,87 @@ export class EventRecurrenceInfoDaily extends React.Component<IEventRecurrenceIn
                   onSelectDate={this.onStartDateChange}
                   formatDate={toLocaleShortDateString}
                 />
-
               </div>
-              <div style={{ display: 'inline-block', verticalAlign: 'top', paddingTop: '10px' }}>
+              <div
+                style={{
+                  display: "inline-block",
+                  verticalAlign: "top",
+                  paddingTop: "10px",
+                }}
+              >
                 <ChoiceGroup
                   selectedKey={this.state.selectdateRangeOption}
                   onChange={this.onDataRangeOptionChange}
                   options={[
                     {
-                      key: 'noDate',
+                      key: "noDate",
                       text: strings.noEndDate,
                     },
                     {
-                      key: 'endDate',
+                      key: "endDate",
                       text: strings.EndByLabel,
                       onRenderField: (props, render) => {
                         return (
-                          <div  >
+                          <div>
                             {render!(props)}
                             <DatePicker
                               firstDayOfWeek={DayOfWeek.Sunday}
                               strings={DayPickerStrings}
                               placeholder={strings.StartDatePlaceHolder}
                               ariaLabel="Select a date"
-                              style={{ display: 'inline-block', verticalAlign: 'top', paddingLeft: '22px', }}
+                              style={{
+                                display: "inline-block",
+                                verticalAlign: "top",
+                                paddingLeft: "22px",
+                              }}
                               onSelectDate={this.onEndDateChange}
                               formatDate={toLocaleShortDateString}
                               value={this.state.endDate}
                               disabled={this.state.disableEndDate}
-
                             />
                           </div>
                         );
-                      }
+                      },
                     },
                     {
-                      key: 'endAfter',
+                      key: "endAfter",
                       text: strings.EndAfterLabel,
                       onRenderField: (props, render) => {
                         return (
-                          <div  >
+                          <div>
                             {render!(props)}
                             <MaskedTextField
-                              styles={{ root: { display: 'inline-block', verticalAlign: 'top', width: '100px', paddingLeft: '10px' } }}
+                              styles={{
+                                root: {
+                                  display: "inline-block",
+                                  verticalAlign: "top",
+                                  width: "100px",
+                                  paddingLeft: "10px",
+                                },
+                              }}
                               mask="999"
-                              maskChar=' '
+                              maskChar=" "
                               value={this.state.numberOcurrences}
                               disabled={this.state.disableNumberOcurrences}
-                              errorMessage={this.state.errorMessageNumberOcurrences}
-                              onChange={this.onNumberOfOcurrencesChange} />
-                            <Label styles={{ root: { display: 'inline-block', verticalAlign: 'top', paddingLeft: '10px' } }}>{ strings.occurrencesLabel }</Label>
+                              errorMessage={
+                                this.state.errorMessageNumberOcurrences
+                              }
+                              onChange={this.onNumberOfOcurrencesChange}
+                            />
+                            <Label
+                              styles={{
+                                root: {
+                                  display: "inline-block",
+                                  verticalAlign: "top",
+                                  paddingLeft: "10px",
+                                },
+                              }}
+                            >
+                              {strings.occurrencesLabel}
+                            </Label>
                           </div>
                         );
-                      }
+                      },
                     },
                   ]}
                   required={true}

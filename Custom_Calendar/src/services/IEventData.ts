@@ -13,7 +13,7 @@ export interface IEventData {
   ownerName?: string;
   fAllDayEvent?: boolean;
   attendes?: number[];
-  geolocation?: { Longitude: number, Latitude: number };
+  geolocation?: { Longitude: number; Latitude: number };
   Category?: string;
   Duration?: number;
   RecurrenceData?: string;

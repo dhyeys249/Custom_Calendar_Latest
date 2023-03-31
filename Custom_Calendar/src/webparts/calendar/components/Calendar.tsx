@@ -61,7 +61,7 @@ import { IUserPermissions } from "./../../../services/IUserPermissions";
 import { MSGraphClient } from "@microsoft/sp-http";
 import * as MicrosoftGraph from "@microsoft/microsoft-graph-types";
 import { graph } from "@pnp/graph";
-import { Views } from "@pnp/sp";
+import { Views, View } from "@pnp/sp";
 
 //const localizer = BigCalendar.momentLocalizer(moment);
 const localizer = momentLocalizer(moment);
@@ -74,28 +74,35 @@ export default class Calendar extends React.Component<
   ICalendarProps,
   ICalendarState
 > {
-  handleShowMore = (events, date, view) => {
-    if (view === "day") {
-      console.log(`Showing more events for date ${date} in the day view`);
-      // Do something with the day view
-    } else {
-      console.log(`Showing more events in the ${view} view`);
-      // Handle other views
-    }
-  };
+  // handleShowMore = (events, date, view) => {
+  //   if (view === "day") {
+  //     console.log(`Showing more events for date ${date} in the day view`);
+  //     // Do something with the day view
+  //   } else {
+  //     console.log(`Showing more events in the ${view} view`);
+  //     // Handle other views
+  //   }
+  // };
   private spService: spservices = null;
   private userListPermissions: IUserPermissions = undefined;
   public constructor(props) {
     super(props);
 
     this.state = {
-      showDialog: false,
-      eventData: [],
-      selectedEvent: undefined,
-      isloading: true,
-      hasError: false,
-      errorMessage: "",
+      sShowDialog: false,
+      sEventData: [],
+      sSelectedEvent: undefined,
+      sIsloading: true,
+      sHasError: false,
+      sErrorMessage: "",
       sAllEvents: [],
+      sSingleValueDropdown: "",
+      sDropdownOptions: [],
+      sIsDropdownSelected: false,
+
+      contextitem: "",
+      createmode: false,
+      isUserAdmin: false,
     };
 
     this.onDismissPanel = this.onDismissPanel.bind(this);
@@ -118,9 +125,9 @@ export default class Calendar extends React.Component<
    */
   private onSelectEvent(event: any) {
     this.setState({
-      showDialog: true,
-      selectedEvent: event,
-      panelMode: IPanelModelEnum.edit,
+      sShowDialog: true,
+      sSelectedEvent: event,
+      sPanelMode: IPanelModelEnum.edit,
     });
   }
 
@@ -131,53 +138,55 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   private async onDismissPanel(refresh: boolean) {
-    this.setState({ showDialog: false });
+    this.setState({ sShowDialog: false });
     if (refresh === true) {
-      this.setState({ isloading: true });
-      await this.loadEvents();
-      this.setState({ isloading: false });
+      this.setState({ sIsloading: true });
+      // await this.loadEvents();
+
+      await this.loadOutlookEvents();
+      this.setState({ sIsloading: false });
     }
   }
   /**
    * @private
    * @memberof Calendar
    */
-  private async loadEvents() {
-    try {
-      // Teste Properties
-      if (
-        !this.props.list ||
-        !this.props.siteUrl ||
-        !this.props.eventStartDate.value ||
-        !this.props.eventEndDate.value
-      )
-        return;
+  // private async loadEvents() {
+  //   try {
+  //     // Teste Properties
+  //     if (
+  //       !this.props.list ||
+  //       !this.props.siteUrl ||
+  //       !this.props.eventStartDate.value ||
+  //       !this.props.eventEndDate.value
+  //     )
+  //       return;
 
-      this.userListPermissions = await this.spService.getUserPermissions(
-        this.props.siteUrl,
-        this.props.list
-      );
+  //     this.userListPermissions = await this.spService.getUserPermissions(
+  //       this.props.siteUrl,
+  //       this.props.list
+  //     );
 
-      const eventsData: IEventData[] = await this.spService.getEvents(
-        escape(this.props.siteUrl),
-        escape(this.props.list),
-        this.props.eventStartDate.value,
-        this.props.eventEndDate.value
-      );
+  //     const eventsData: IEventData[] = await this.spService.getEvents(
+  //       escape(this.props.siteUrl),
+  //       escape(this.props.list),
+  //       this.props.eventStartDate.value,
+  //       this.props.eventEndDate.value
+  //     );
 
-      this.setState({
-        eventData: eventsData,
-        hasError: false,
-        errorMessage: "",
-      });
-    } catch (error) {
-      this.setState({
-        hasError: true,
-        errorMessage: error.message,
-        isloading: false,
-      });
-    }
-  }
+  //     this.setState({
+  //       sEventData: eventsData,
+  //       sHasError: false,
+  //       sErrorMessage: "",
+  //     });
+  //   } catch (error) {
+  //     this.setState({
+  //       sHasError: true,
+  //       sErrorMessage: error.message,
+  //       sIsloading: false,
+  //     });
+  //   }
+  // }
   // ::::::::::
   public async loadOutlookEvents() {
     let lAllEventsData = [],
@@ -185,16 +194,37 @@ export default class Calendar extends React.Component<
       NewArray = [],
       array = [];
     let index = 0;
+    const now = new Date();
+    const threeMonthsAgo = new Date();
+    const twoYearsFuture = new Date();
+    twoYearsFuture.setMonth(now.getMonth() + 24);
+    threeMonthsAgo.setMonth(now.getMonth() - 3);
+    console.log(
+      "Three months ago: " +
+        threeMonthsAgo +
+        "two years future: " +
+        twoYearsFuture
+    );
+    const filterDate = new Date().toISOString();
     this.props.context.msGraphClientFactory
       .getClient()
       .then((client: MSGraphClient) => {
         client
           .api("me/calendar/events")
+
+          // .filter(
+          //   `start/dateTime ge '${threeMonthsAgo.toISOString()}' and end/dateTime ge '${twoYearsFuture.toISOString()}'`
+          // )
           .orderby("createdDateTime DESC")
-          .top(1000)
+          .top(5000)
           // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
-            // console.log("All Events: ", res);
+            if (err) {
+              console.log("Error in fetching events from outlook: ", err);
+              return;
+            }
+
+            console.log("All Events: ", res);
 
             // this.spService.AddOutlookEventstoList(res);
 
@@ -261,11 +291,11 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   public async componentDidMount() {
-    this.setState({ isloading: true });
-    await this.loadEvents();
+    this.setState({ sIsloading: true });
+    // await this.loadEvents();
     await this.loadOutlookEvents();
     // await this.spService.AddOutlookEventstoList(this.context);
-    this.setState({ isloading: false });
+    this.setState({ sIsloading: false });
   }
 
   /**
@@ -275,7 +305,7 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   public componentDidCatch(error: any, errorInfo: any) {
-    this.setState({ hasError: true, errorMessage: errorInfo.componentStack });
+    this.setState({ sHasError: true, sErrorMessage: errorInfo.componentStack });
   }
   /**
    *
@@ -284,28 +314,28 @@ export default class Calendar extends React.Component<
    * @param {ICalendarState} prevState
    * @memberof Calendar
    */
-  public async componentDidUpdate(
-    prevProps: ICalendarProps,
-    prevState: ICalendarState
-  ) {
-    if (
-      !this.props.list ||
-      !this.props.siteUrl ||
-      !this.props.eventStartDate.value ||
-      !this.props.eventEndDate.value
-    )
-      return;
-    // Get  Properties change
-    if (
-      prevProps.list !== this.props.list ||
-      this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
-      this.props.eventEndDate.value !== prevProps.eventEndDate.value
-    ) {
-      this.setState({ isloading: true });
-      await this.loadEvents();
-      this.setState({ isloading: false });
-    }
-  }
+  // public async componentDidUpdate(
+  //   prevProps: ICalendarProps,
+  //   prevState: ICalendarState
+  // ) {
+  //   if (
+  //     !this.props.list ||
+  //     !this.props.siteUrl ||
+  //     !this.props.eventStartDate.value ||
+  //     !this.props.eventEndDate.value
+  //   )
+  //     return;
+  //   // Get  Properties change
+  //   if (
+  //     prevProps.list !== this.props.list ||
+  //     this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
+  //     this.props.eventEndDate.value !== prevProps.eventEndDate.value
+  //   ) {
+  //     this.setState({ sIsloading: true });
+  //     // await this.loadEvents();
+  //     this.setState({ sIsloading: false });
+  //   }
+  // }
   /**
    * @private
    * @param { event }
@@ -431,13 +461,13 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   public async onSelectSlot({ start, end }) {
-    if (!this.userListPermissions.hasPermissionAdd) return;
+    // if (!this.userListPermissions.hasPermissionAdd) return;
     this.setState({
-      showDialog: true,
-      startDateSlot: start,
-      endDateSlot: end,
-      selectedEvent: undefined,
-      panelMode: IPanelModelEnum.add,
+      sShowDialog: true,
+      sStartDateSlot: start,
+      sEndDateSlot: end,
+      sSelectedEvent: undefined,
+      sPanelMode: IPanelModelEnum.add,
     });
   }
 
@@ -492,11 +522,11 @@ export default class Calendar extends React.Component<
           style={{ backgroundColor: "white", padding: "20px" }}
         >
           <WebPartTitle
-            displayMode={this.props.displayMode}
-            title={this.props.title}
-            updateProperty={this.props.updateProperty}
+            displayMode={this.props.pDisplayMode}
+            title={this.props.pTitle}
+            updateProperty={this.props.pUpdateProperty}
           />
-          {!this.props.list ||
+          {/* {!this.props.list ||
           !this.props.eventStartDate.value ||
           !this.props.eventEndDate.value ? (
             <Placeholder
@@ -504,77 +534,79 @@ export default class Calendar extends React.Component<
               iconText={strings.WebpartConfigIconText}
               description={strings.WebpartConfigDescription}
               buttonLabel={strings.WebPartConfigButtonLabel}
-              hideButton={this.props.displayMode === DisplayMode.Read}
+              hideButton={this.props.pDisplayMode === DisplayMode.Read}
               onConfigure={this.onConfigure.bind(this)}
             />
           ) : // test if has errors
-          this.state.hasError ? (
+          this.state.sHasError ? (
             <MessageBar messageBarType={MessageBarType.error}>
-              {this.state.errorMessage}
+              {this.state.sErrorMessage}
             </MessageBar>
           ) : (
             // show Calendar
-            // Test if is loading Events
-            <div>
-              {this.state.isloading ? (
+            // Test if is loading Events */}
+          <div>
+            {/* {this.state.sIsloading ? (
                 <Spinner
                   size={SpinnerSize.large}
                   label={strings.LoadingEventsLabel}
                 />
-              ) : (
-                <div className={styles.container}>
-                  <MyCalendar
-                    dayPropGetter={this.dayPropGetter}
-                    localizer={localizer}
-                    selectable
-                    // events={this.state.eventData}
-                    events={this.state.sAllEvents}
-                    startAccessor="EventDate"
-                    endAccessor="EndDate"
-                    eventPropGetter={this.eventStyleGetter}
-                    onSelectSlot={this.onSelectSlot}
-                    // onShowMore={this.handleShowMore}
-                    components={{
-                      event: this.renderEvent,
-                    }}
-                    // defaultView={"week"}
-                    onSelectEvent={this.onSelectEvent}
-                    defaultDate={moment().startOf("day").toDate()}
-                    views={{
-                      day: true,
-                      week: true,
-                      month: true,
-                      agenda: true,
-                      work_week: Year,
-                    }}
-                    messages={{
-                      today: strings.todayLabel,
-                      previous: strings.previousLabel,
-                      next: strings.nextLabel,
-                      month: strings.monthLabel,
-                      week: strings.weekLabel,
-                      day: strings.dayLable,
-                      showMore: (total) => `+${total} ${strings.showMore}`,
-                      work_week: strings.yearHeaderLabel,
-                    }}
+              ) : ( */}
+            <div className={styles.container}>
+              {/* <div className={styles.calendarcontainer}> */}
+              <MyCalendar
+                dayPropGetter={this.dayPropGetter}
+                localizer={localizer}
+                selectable
+                // events={this.state.eventData}
+                events={this.state.sAllEvents}
+                startAccessor="EventDate"
+                endAccessor="EndDate"
+                eventPropGetter={this.eventStyleGetter}
+                onSelectSlot={this.onSelectSlot}
+                // onShowMore={this.handleShowMore}
+                components={{
+                  event: this.renderEvent,
+                }}
+                // defaultView={"day"}
+                onSelectEvent={this.onSelectEvent}
+                defaultDate={moment().startOf("day").toDate()}
+                views={{
+                  day: true,
+                  week: true,
+                  month: true,
+                  agenda: true,
+                  work_week: Year,
+                }}
+                messages={{
+                  today: strings.todayLabel,
+                  previous: strings.previousLabel,
+                  next: strings.nextLabel,
+                  month: strings.monthLabel,
+                  week: strings.weekLabel,
+                  day: strings.dayLable,
+                  showMore: (total) => `+${total} ${strings.showMore}`,
+                  work_week: strings.yearHeaderLabel,
+                }}
 
-                    // onShowMore={(events, date, view) => {
-                    //   if (view === "month") {
-                    //   }
-                    // }}
-                  />
-                </div>
-              )}
+                // onShowMore={(events, date, view) => {
+                //   if (view === "month") {
+                //   }
+                // }}
+              />
             </div>
-          )}
-          {this.state.showDialog && (
+            {/* </div> */}
+            {/* )} */}
+          </div>
+          {/* )} */}
+          {this.state.sShowDialog && (
             <Event
-              event={this.state.selectedEvent}
-              panelMode={this.state.panelMode}
+              event={this.state.sSelectedEvent}
+              panelMode={this.state.sPanelMode}
               onDissmissPanel={this.onDismissPanel}
-              showPanel={this.state.showDialog}
-              startDate={this.state.startDateSlot}
-              endDate={this.state.endDateSlot}
+              showPanel={this.state.sShowDialog}
+              startDate={this.state.sStartDateSlot}
+              endDate={this.state.sEndDateSlot}
               context={this.props.context}
               siteUrl={this.props.siteUrl}
               listId={this.props.list}
