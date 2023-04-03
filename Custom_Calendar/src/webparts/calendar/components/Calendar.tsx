@@ -526,7 +526,7 @@ export default class Calendar extends React.Component<
             title={this.props.pTitle}
             updateProperty={this.props.pUpdateProperty}
           />
-          {/* {!this.props.list ||
+          {!this.props.list ||
           !this.props.eventStartDate.value ||
           !this.props.eventEndDate.value ? (
             <Placeholder
@@ -544,61 +544,60 @@ export default class Calendar extends React.Component<
             </MessageBar>
           ) : (
             // show Calendar
-            // Test if is loading Events */}
-          <div>
-            {/* {this.state.sIsloading ? (
+            // Test if is loading Events
+            <div>
+              {this.state.sIsloading ? (
                 <Spinner
                   size={SpinnerSize.large}
                   label={strings.LoadingEventsLabel}
                 />
-              ) : ( */}
-            <div className={styles.container}>
-              {/* <div className={styles.calendarcontainer}> */}
-              <MyCalendar
-                dayPropGetter={this.dayPropGetter}
-                localizer={localizer}
-                selectable
-                // events={this.state.eventData}
-                events={this.state.sAllEvents}
-                startAccessor="EventDate"
-                endAccessor="EndDate"
-                eventPropGetter={this.eventStyleGetter}
-                onSelectSlot={this.onSelectSlot}
-                // onShowMore={this.handleShowMore}
-                components={{
-                  event: this.renderEvent,
-                }}
-                // defaultView={"day"}
-                onSelectEvent={this.onSelectEvent}
-                defaultDate={moment().startOf("day").toDate()}
-                views={{
-                  day: true,
-                  week: true,
-                  month: true,
-                  agenda: true,
-                  work_week: Year,
-                }}
-                messages={{
-                  today: strings.todayLabel,
-                  previous: strings.previousLabel,
-                  next: strings.nextLabel,
-                  month: strings.monthLabel,
-                  week: strings.weekLabel,
-                  day: strings.dayLable,
-                  showMore: (total) => `+${total} ${strings.showMore}`,
-                  work_week: strings.yearHeaderLabel,
-                }}
+              ) : (
+                <div className={styles.container}>
+                  {/* <div className={styles.calendarcontainer}> */}
+                  <MyCalendar
+                    dayPropGetter={this.dayPropGetter}
+                    localizer={localizer}
+                    selectable
+                    // events={this.state.eventData}
+                    events={this.state.sAllEvents}
+                    startAccessor="EventDate"
+                    endAccessor="EndDate"
+                    eventPropGetter={this.eventStyleGetter}
+                    onSelectSlot={this.onSelectSlot}
+                    // onShowMore={this.handleShowMore}
+                    components={{
+                      event: this.renderEvent,
+                    }}
+                    // defaultView={"day"}
+                    onSelectEvent={this.onSelectEvent}
+                    defaultDate={moment().startOf("day").toDate()}
+                    views={{
+                      day: true,
+                      week: true,
+                      month: true,
+                      agenda: true,
+                      work_week: Year,
+                    }}
+                    messages={{
+                      today: strings.todayLabel,
+                      previous: strings.previousLabel,
+                      next: strings.nextLabel,
+                      month: strings.monthLabel,
+                      week: strings.weekLabel,
+                      day: strings.dayLable,
+                      showMore: (total) => `+${total} ${strings.showMore}`,
+                      work_week: strings.yearHeaderLabel,
+                    }}
 
-                // onShowMore={(events, date, view) => {
-                //   if (view === "month") {
-                //   }
-                // }}
-              />
+                    // onShowMore={(events, date, view) => {
+                    //   if (view === "month") {
+                    //   }
+                    // }}
+                  />
+                </div>
+              )}
             </div>
-            {/* </div> */}
-            {/* )} */}
-          </div>
-          {/* )} */}
+          )}
           {this.state.sShowDialog && (
             <Event
               event={this.state.sSelectedEvent}

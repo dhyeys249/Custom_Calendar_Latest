@@ -293,6 +293,9 @@ export class Event extends React.Component<IEventProps, IEventState> {
             this.props.siteUrl,
             this.props.listId
           );
+          console.log(this.props.siteUrl);
+          console.log(this.props.listId);
+          console.log(eventData);
           break;
         case IPanelModelEnum.add:
           await this.spService.addEvent(
@@ -344,7 +347,10 @@ export class Event extends React.Component<IEventProps, IEventState> {
           this.props.listId,
           eventId
         );
-
+    console.log(this.props.listId);
+    console.log(this.props.siteUrl);
+    console.log(eventId);
+    console.log(event);
     let editorState: EditorState;
     // Load Regional Settings
     const siteRegionalSettings =
@@ -806,6 +812,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
         ? Number(this.state.eventData.MasterSeriesItemID)
         : this.state.eventData.Id
     );
+    console.log(this.renderEventData);
     this.setState({
       showRecurrenceSeriesInfo: true,
       recurrenceSeriesEdited: true,

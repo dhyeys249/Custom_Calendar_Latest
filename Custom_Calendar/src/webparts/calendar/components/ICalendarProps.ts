@@ -6,8 +6,8 @@ export interface ICalendarProps {
   siteUrl: string;
   list: string;
   pDisplayMode: DisplayMode;
-  // eventStartDate: IDateTimeFieldValue;
-  // eventEndDate: IDateTimeFieldValue;
+  eventStartDate: IDateTimeFieldValue;
+  eventEndDate: IDateTimeFieldValue;
   pSpfxContext: WebPartContext;
   userDisplayName: string;
   pUpdateProperty: (value: string) => void;
