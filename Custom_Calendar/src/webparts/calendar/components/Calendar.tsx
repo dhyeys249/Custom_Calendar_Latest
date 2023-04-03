@@ -588,7 +588,9 @@ export default class Calendar extends React.Component<
                       showMore: (total) => `+${total} ${strings.showMore}`,
                       work_week: strings.yearHeaderLabel,
                     }}
-
+                    onView={(views) => {
+                      console.log(`View changed to: ${views}`);
+                    }}
                     // onShowMore={(events, date, view) => {
                     //   if (view === "month") {
                     //   }
