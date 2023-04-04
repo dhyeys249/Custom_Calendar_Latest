@@ -90,19 +90,19 @@ export default class Calendar extends React.Component<
 
     this.state = {
       sShowDialog: false,
-      sEventData: [],
+      eventData: [],
       sSelectedEvent: undefined,
       sIsloading: true,
       sHasError: false,
       sErrorMessage: "",
       sAllEvents: [],
-      sSingleValueDropdown: "",
-      sDropdownOptions: [],
-      sIsDropdownSelected: false,
 
-      contextitem: "",
-      createmode: false,
-      isUserAdmin: false,
+      // sSingleValueDropdown: "",
+      // sDropdownOptions: [],
+      // sIsDropdownSelected: false,
+      // contextitem: "",
+      // createmode: false,
+      // isUserAdmin: false,
     };
 
     this.onDismissPanel = this.onDismissPanel.bind(this);
@@ -141,8 +141,7 @@ export default class Calendar extends React.Component<
     this.setState({ sShowDialog: false });
     if (refresh === true) {
       this.setState({ sIsloading: true });
-      // await this.loadEvents();
-
+      // // await this.loadEvents();
       await this.loadOutlookEvents();
       this.setState({ sIsloading: false });
     }
@@ -151,42 +150,42 @@ export default class Calendar extends React.Component<
    * @private
    * @memberof Calendar
    */
-  // private async loadEvents() {
-  //   try {
-  //     // Teste Properties
-  //     if (
-  //       !this.props.list ||
-  //       !this.props.siteUrl ||
-  //       !this.props.eventStartDate.value ||
-  //       !this.props.eventEndDate.value
-  //     )
-  //       return;
+  private async loadEvents() {
+    try {
+      // Teste Properties
+      if (
+        !this.props.list ||
+        !this.props.siteUrl ||
+        !this.props.eventStartDate.value ||
+        !this.props.eventEndDate.value
+      )
+        return;
 
-  //     this.userListPermissions = await this.spService.getUserPermissions(
-  //       this.props.siteUrl,
-  //       this.props.list
-  //     );
+      this.userListPermissions = await this.spService.getUserPermissions(
+        this.props.siteUrl,
+        this.props.list
+      );
 
-  //     const eventsData: IEventData[] = await this.spService.getEvents(
-  //       escape(this.props.siteUrl),
-  //       escape(this.props.list),
-  //       this.props.eventStartDate.value,
-  //       this.props.eventEndDate.value
-  //     );
+      const eventsData: IEventData[] = await this.spService.getEvents(
+        escape(this.props.siteUrl),
+        escape(this.props.list),
+        this.props.eventStartDate.value,
+        this.props.eventEndDate.value
+      );
 
-  //     this.setState({
-  //       sEventData: eventsData,
-  //       sHasError: false,
-  //       sErrorMessage: "",
-  //     });
-  //   } catch (error) {
-  //     this.setState({
-  //       sHasError: true,
-  //       sErrorMessage: error.message,
-  //       sIsloading: false,
-  //     });
-  //   }
-  // }
+      this.setState({
+        eventData: eventsData,
+        sHasError: false,
+        sErrorMessage: "",
+      });
+    } catch (error) {
+      this.setState({
+        sHasError: true,
+        sErrorMessage: error.message,
+        sIsloading: false,
+      });
+    }
+  }
   // ::::::::::
   public async loadOutlookEvents() {
     let lAllEventsData = [],
@@ -216,7 +215,7 @@ export default class Calendar extends React.Component<
           //   `start/dateTime ge '${threeMonthsAgo.toISOString()}' and end/dateTime ge '${twoYearsFuture.toISOString()}'`
           // )
           .orderby("createdDateTime DESC")
-          .top(5000)
+          .top(50)
           // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
             if (err) {
@@ -265,7 +264,7 @@ export default class Calendar extends React.Component<
               // console.log("Attendees: ", element.attendees);
               // console.log("Categories: ", element.categories);
             });
-            this.setState({ sAllEvents: lAllEventsData });
+            this.setState({ eventData: lAllEventsData });
           });
       });
 
@@ -314,28 +313,29 @@ export default class Calendar extends React.Component<
    * @param {ICalendarState} prevState
    * @memberof Calendar
    */
-  // public async componentDidUpdate(
-  //   prevProps: ICalendarProps,
-  //   prevState: ICalendarState
-  // ) {
-  //   if (
-  //     !this.props.list ||
-  //     !this.props.siteUrl ||
-  //     !this.props.eventStartDate.value ||
-  //     !this.props.eventEndDate.value
-  //   )
-  //     return;
-  //   // Get  Properties change
-  //   if (
-  //     prevProps.list !== this.props.list ||
-  //     this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
-  //     this.props.eventEndDate.value !== prevProps.eventEndDate.value
-  //   ) {
-  //     this.setState({ sIsloading: true });
-  //     // await this.loadEvents();
-  //     this.setState({ sIsloading: false });
-  //   }
-  // }
+  public async componentDidUpdate(
+    prevProps: ICalendarProps,
+    prevState: ICalendarState
+  ) {
+    if (
+      !this.props.list ||
+      !this.props.siteUrl ||
+      !this.props.eventStartDate.value ||
+      !this.props.eventEndDate.value
+    )
+      return;
+    // Get  Properties change
+    if (
+      prevProps.list !== this.props.list ||
+      this.props.eventStartDate.value !== prevProps.eventStartDate.value ||
+      this.props.eventEndDate.value !== prevProps.eventEndDate.value
+    ) {
+      this.setState({ sIsloading: true });
+      // await this.loadEvents();
+      await this.loadOutlookEvents();
+      this.setState({ sIsloading: false });
+    }
+  }
   /**
    * @private
    * @param { event }
@@ -558,8 +558,8 @@ export default class Calendar extends React.Component<
                     dayPropGetter={this.dayPropGetter}
                     localizer={localizer}
                     selectable
-                    // events={this.state.eventData}
-                    events={this.state.sAllEvents}
+                    events={this.state.eventData}
+                    // events={this.state.sAllEvents}
                     startAccessor="EventDate"
                     endAccessor="EndDate"
                     eventPropGetter={this.eventStyleGetter}

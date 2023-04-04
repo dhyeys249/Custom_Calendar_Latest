@@ -195,7 +195,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
    *  Hide Panel
    *
    * @private
-   * @memberof Event
+   * @memberof
    */
   private hidePanel() {
     this.props.onDissmissPanel(false);
@@ -303,7 +303,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
             this.props.siteUrl,
             this.props.listId
           );
-          this.addOutlookEvent();
+          // this.addOutlookEvent();
 
           break;
         default:
@@ -703,7 +703,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
     // refreshing calender again
     const calendar = new Calendar(this.context);
-    calendar.loadOutlookEvents();
+    // calendar.loadOutlookEvents();
     // await this.Calendar.loadOutlookEvents();
     // ::::::::::::::::::::
   }

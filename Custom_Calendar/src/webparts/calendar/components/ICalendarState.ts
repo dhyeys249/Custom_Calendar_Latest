@@ -2,7 +2,7 @@ import { IPanelModelEnum } from "../../../controls/Event/IPanelModeEnum";
 import { IEventData } from "./../../../services/IEventData";
 export interface ICalendarState {
   sShowDialog: boolean;
-  sEventData: IEventData[];
+  eventData: any[];
   sSelectedEvent: IEventData;
   sPanelMode?: IPanelModelEnum;
   sStartDateSlot?: Date;
@@ -11,11 +11,11 @@ export interface ICalendarState {
   sHasError: boolean;
   sErrorMessage: string;
   sAllEvents: any[];
-  sDropdownOptions: any[];
-  sSingleValueDropdown: string;
-  sIsDropdownSelected: boolean;
 
-  contextitem: string;
-  createmode: boolean;
-  isUserAdmin: boolean;
+  // sDropdownOptions: any[];
+  // sSingleValueDropdown: string;
+  // sIsDropdownSelected: boolean;
+  // contextitem: string;
+  // createmode: boolean;
+  // isUserAdmin: boolean;
 }

@@ -12,7 +12,7 @@ export interface ICalendarProps {
   userDisplayName: string;
   pUpdateProperty: (value: string) => void;
   pContext: WebPartContext;
-  context: any;
+  context: WebPartContext;
   checkPermission: any;
   uploadImage: any;
   backToHome: any;
