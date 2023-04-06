@@ -387,21 +387,21 @@ export class Event extends React.Component<IEventProps, IEventState> {
       console.log("All Attendees: ", event.attendes);
 
       // testa  attendees
-      console.log(event);
-      console.log(event.attendes);
-      const attendees = event.attendes;
-      let selectedUsers: string[] = [];
-      if (attendees && attendees.length > 0) {
-        for (const userId of attendees) {
-          let user: any = await this.spService.getUserById(
-            userId,
-            this.props.siteUrl
-          );
-          if (user) {
-            selectedUsers.push(user.UserPrincipalName);
-          }
-        }
-      }
+      // console.log(event);
+      // console.log(event.attendes);
+      // const attendees = event.attendes;
+      // let selectedUsers: string[] = [];
+      // if (attendees && attendees.length > 0) {
+      //   for (const userId of attendees) {
+      //     let user: any = await this.spService.getUserById(
+      //       userId,
+      //       this.props.siteUrl
+      //     );
+      //     if (user) {
+      //       selectedUsers.push(user.UserPrincipalName);
+      //     }
+      //   }
+      // }
       // Has geolocation ?
       // this.latitude =
       //   event.geolocation && event.geolocation.Latitude

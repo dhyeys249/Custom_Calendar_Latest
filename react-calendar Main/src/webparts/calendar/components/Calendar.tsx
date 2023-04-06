@@ -233,7 +233,7 @@ export default class Calendar extends React.Component<
                 id: element.id,
                 // ID: element.id,
                 title: element.subject,
-                Description: "Test",
+                Description: element.bodyPreview,
                 location: element.location.displayName,
                 EventDate: new Date(startDate),
                 EndDate: new Date(endDate),
@@ -260,7 +260,8 @@ export default class Calendar extends React.Component<
                 MasterSeriesItemID: element.seriesMasterId,
               });
 
-              // console.log("Attendees: ", element.attendees);
+              // Need looping Array here for getting all attendees id.
+              console.log("Attendees: ", element.attendees);
               // console.log("Categories: ", element.categories);
             });
             this.setState({ eventData: lAllEventsData });
