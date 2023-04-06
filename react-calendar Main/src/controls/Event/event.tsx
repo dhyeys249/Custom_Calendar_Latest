@@ -382,22 +382,26 @@ export class Event extends React.Component<IEventProps, IEventState> {
         editorState = EditorState.createWithContent(contentState);
       }
 
+      //get Attendees from Outlook::::
+
+      console.log("All Attendees: ", event.attendes);
+
       // testa  attendees
-      // console.log(event);
-      // console.log(event.attendes);
-      // const attendees = event.attendes;
-      // let selectedUsers: string[] = [];
-      // if (attendees && attendees.length > 0) {
-      //   for (const userId of attendees) {
-      //     let user: any = await this.spService.getUserById(
-      //       userId,
-      //       this.props.siteUrl
-      //     );
-      //     if (user) {
-      //       selectedUsers.push(user.UserPrincipalName);
-      //     }
-      //   }
-      // }
+      console.log(event);
+      console.log(event.attendes);
+      const attendees = event.attendes;
+      let selectedUsers: string[] = [];
+      if (attendees && attendees.length > 0) {
+        for (const userId of attendees) {
+          let user: any = await this.spService.getUserById(
+            userId,
+            this.props.siteUrl
+          );
+          if (user) {
+            selectedUsers.push(user.UserPrincipalName);
+          }
+        }
+      }
       // Has geolocation ?
       // this.latitude =
       //   event.geolocation && event.geolocation.Latitude
@@ -411,10 +415,12 @@ export class Event extends React.Component<IEventProps, IEventState> {
       // event.geolocation.Latitude = this.latitude;
       // event.geolocation.Longitude = this.longitude;
 
-      const recurrenceInfo =
-        event.EventType === "4" && event.MasterSeriesItemID !== ""
-          ? event.RecurrenceData
-          : await this.returnExceptionRecurrenceInfo(event.RecurrenceData);
+      //
+
+      // const recurrenceInfo =
+      //   event.EventType === "4" && event.MasterSeriesItemID !== ""
+      //     ? event.RecurrenceData
+      //     : await this.returnExceptionRecurrenceInfo(event.RecurrenceData);
       // Update Component Data
       this.setState({
         eventData: event,
@@ -431,7 +437,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
         // siteRegionalSettings: siteRegionalSettings,
         locationLatitude: this.latitude,
         locationLongitude: this.longitude,
-        recurrenceDescription: recurrenceInfo,
+        // recurrenceDescription: recurrenceInfo,
       });
     } else {
       editorState = EditorState.createEmpty();
@@ -1080,6 +1086,8 @@ export class Event extends React.Component<IEventProps, IEventState> {
   public render(): React.ReactElement<IEventProps> {
     const { editorState } = this.state;
 
+    // console.log("this.state.endDate:", this.state.endDate);
+    // console.log("this.state.eventData.EndDate:", this.state.eventData.EndDate);
     return (
       <div>
         <Panel
@@ -1279,7 +1287,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                   placeholder={strings.EndDatePlaceHolder}
                   ariaLabel={strings.EndDatePlaceHolder}
                   allowTextInput={true}
-                  value={this.state.eventData.EndDate || this.state.endDate}
+                  value={this.state.endDate}
                   label={strings.EndDateLabel}
                   onSelectDate={this.onSelectDateEnd}
                   formatDate={toLocaleShortDateString}
