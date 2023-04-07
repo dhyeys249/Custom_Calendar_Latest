@@ -62,6 +62,15 @@ export default class spservices {
     }
   }
 
+  public getnames = async (user) => {
+    try {
+      const names = await sp.web.getUserById(user).get();
+      return names;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  };
+
   /**
    *
    * @param {IEventData} newEvent
@@ -153,6 +162,7 @@ export default class spservices {
       const endDate = await this.getLocalTime(event.EndDate);
 
       returnEvent = {
+        id: event.ID,
         Id: event.ID,
         ID: event.ID,
         EventType: event.EventType,

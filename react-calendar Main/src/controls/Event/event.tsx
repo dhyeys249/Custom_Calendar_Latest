@@ -30,6 +30,7 @@ import {
   DialogFooter,
   Toggle,
 } from "office-ui-fabric-react";
+import calendar from "../../webparts/calendar/components/Calendar";
 
 import { IPanelModelEnum } from "./IPanelModeEnum";
 import { EditorState, convertToRaw, ContentState } from "draft-js";
@@ -42,6 +43,15 @@ import { Map, ICoordinates, MapType } from "@pnp/spfx-controls-react/lib/Map";
 import { EventRecurrenceInfo } from "../../controls/EventRecurrenceInfo/EventRecurrenceInfo";
 import { getGUID } from "@pnp/common";
 import { toLocaleShortDateString } from "../../utils/dateUtils";
+import { sp } from "@pnp/pnpjs";
+import {
+  SPHttpClient,
+  SPHttpClientResponse,
+  MSGraphClient,
+} from "@microsoft/sp-http";
+import { event } from "jquery";
+import Calendar from "../../webparts/calendar/components/Calendar";
+
 const format = require("string-format");
 
 const DayPickerStrings: IDatePickerStrings = {
@@ -200,47 +210,47 @@ export class Event extends React.Component<IEventProps, IEventState> {
     let panelMode = this.props.panelMode;
     let startDate: string = null;
     let endDate: string = null;
-    eventData.fRecurrence = false;
+    // eventData.fRecurrence = false;
 
     // set All day event
     eventData.fAllDayEvent = this.state.isAllDayEvent;
 
     // if there are new Event recurrence or Edited recurrence series
-    if (this.state.recurrenceSeriesEdited || this.state.newRecurrenceEvent) {
-      eventData.RecurrenceData = this.returnedRecurrenceInfo.recurrenceData;
-      startDate = `${moment(this.returnedRecurrenceInfo.eventDate).format(
-        "YYYY/MM/DD"
-      )}`;
-      endDate = `${moment(this.returnedRecurrenceInfo.endDate).format(
-        "YYYY/MM/DD"
-      )}`;
+    // if (this.state.recurrenceSeriesEdited || this.state.newRecurrenceEvent) {
+    //   eventData.RecurrenceData = this.returnedRecurrenceInfo.recurrenceData;
+    //   startDate = `${moment(this.returnedRecurrenceInfo.eventDate).format(
+    //     "YYYY/MM/DD"
+    //   )}`;
+    //   endDate = `${moment(this.returnedRecurrenceInfo.endDate).format(
+    //     "YYYY/MM/DD"
+    //   )}`;
 
-      if (eventData.EventType == "0" && this.state.newRecurrenceEvent) {
-        eventData.EventType = "1";
-        eventData.fRecurrence = true;
-        eventData.UID = getGUID();
-      }
+    //   if (eventData.EventType == "0" && this.state.newRecurrenceEvent) {
+    //     eventData.EventType = "1";
+    //     eventData.fRecurrence = true;
+    //     eventData.UID = getGUID();
+    //   }
 
-      if (eventData.EventType == "1" && this.state.recurrenceSeriesEdited) {
-        eventData.fRecurrence = true;
-        eventData.UID = getGUID();
-      }
-    } else {
-      if (this.state.eventData.EventType == "1") {
-        // recurrence exception
-        eventData.RecurrenceID = eventData.EventDate;
-        eventData.MasterSeriesItemID = eventData.ID.toString();
-        eventData.EventType = "4";
-        eventData.fRecurrence = true;
-        eventData.UID = getGUID();
-        panelMode = IPanelModelEnum.add;
-        eventData.RecurrenceData = await this.returnExceptionRecurrenceInfo(
-          eventData.RecurrenceData
-        );
-      }
-      startDate = `${moment(this.state.startDate).format("YYYY/MM/DD")}`;
-      endDate = `${moment(this.state.endDate).format("YYYY/MM/DD")}`;
-    }
+    //   if (eventData.EventType == "1" && this.state.recurrenceSeriesEdited) {
+    //     eventData.fRecurrence = true;
+    //     eventData.UID = getGUID();
+    //   }
+    // } else {
+    //   if (this.state.eventData.EventType == "1") {
+    //     // recurrence exception
+    //     eventData.RecurrenceID = eventData.EventDate;
+    //     // eventData.MasterSeriesItemID = eventData.ID.toString();
+    //     eventData.EventType = "4";
+    //     eventData.fRecurrence = true;
+    //     eventData.UID = getGUID();
+    //     panelMode = IPanelModelEnum.add;
+    //     eventData.RecurrenceData = await this.returnExceptionRecurrenceInfo(
+    //       eventData.RecurrenceData
+    //     );
+    //   }
+    //   startDate = `${moment(this.state.startDate).format("YYYY/MM/DD")}`;
+    //   endDate = `${moment(this.state.endDate).format("YYYY/MM/DD")}`;
+    // }
 
     // Start Date
     const startTime = `${this.state.startSelectedHour.key}:${this.state.startSelectedMin.key}`;
@@ -263,7 +273,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
     //   this.latitude,
     //   this.longitude
     // );
-    eventData.location = "N/A";
+    // eventData.location = "N/A";
 
     // get Attendees
     if (!eventData.attendes) {
@@ -289,18 +299,22 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
       switch (panelMode) {
         case IPanelModelEnum.edit:
-          await this.spService.updateEvent(
-            eventData,
-            this.props.siteUrl,
-            this.props.listId
-          );
+          // await this.spService.updateEvent(
+          //   eventData,
+          //   this.props.siteUrl,
+          //   this.props.listId
+          // );
+          console.log("eventData Before updateOutlookEvent:", eventData);
+          this.updateOutlookEvent();
           break;
         case IPanelModelEnum.add:
-          await this.spService.addEvent(
-            eventData,
-            this.props.siteUrl,
-            this.props.listId
-          );
+          // await this.spService.addEvent(
+          //   eventData,
+          //   this.props.siteUrl,
+          //   this.props.listId
+          // );
+          console.log("eventData Before addOutlookEvent:", eventData);
+          this.addOutlookEvent();
           break;
         default:
           break;
@@ -345,7 +359,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
     //     );
 
     const event: IEventData = this.props.event;
-    console.log("event from event.tsx", event);
+    // console.log("event from event.tsx", event);
 
     let editorState: EditorState;
     // Load Regional Settings
@@ -384,24 +398,25 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
       //get Attendees from Outlook::::
 
-      console.log("All Attendees: ", event.attendes);
+      // console.log("All Attendees: ", event.attendes);
 
       // testa  attendees
-      // console.log(event);
-      // console.log(event.attendes);
-      // const attendees = event.attendes;
-      // let selectedUsers: string[] = [];
-      // if (attendees && attendees.length > 0) {
-      //   for (const userId of attendees) {
-      //     let user: any = await this.spService.getUserById(
-      //       userId,
-      //       this.props.siteUrl
-      //     );
-      //     if (user) {
-      //       selectedUsers.push(user.UserPrincipalName);
-      //     }
-      //   }
-      // }
+      console.log(event);
+      console.log(this.state.eventData.attendes);
+      const attendees = this.state.eventData.attendes;
+      let selectedUsers: string[] = [];
+      if (attendees && attendees.length > 0) {
+        for (const userId of attendees) {
+          let user: any = await this.spService.getUserById(
+            userId,
+            this.props.siteUrl
+          );
+          if (user) {
+            selectedUsers.push(user.UserPrincipalName);
+            console.log(user);
+          }
+        }
+      }
       // Has geolocation ?
       // this.latitude =
       //   event.geolocation && event.geolocation.Latitude
@@ -572,7 +587,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
    * @memberof Event
    */
   private onDelete(ev: React.MouseEvent<HTMLDivElement>) {
-    ev.preventDefault();
+    // ev.preventDefault();
     this.setState({ displayDialog: true });
   }
 
@@ -589,7 +604,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
   /**
    *
-   *
+   *confirmDelete
    * @private
    * @param {React.MouseEvent<HTMLDivElement>} ev
    * @memberof Event
@@ -601,12 +616,15 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
       switch (this.props.panelMode) {
         case IPanelModelEnum.edit:
-          await this.spService.deleteEvent(
-            this.state.eventData,
-            this.props.siteUrl,
-            this.props.listId,
-            this.state.recurrenceSeriesEdited
-          );
+          // await this.spService.deleteEvent(
+          //   this.state.eventData,
+          //   this.props.siteUrl,
+          //   this.props.listId,
+          //   this.state.recurrenceSeriesEdited
+          // );
+
+          this.outlookEventDelete();
+
           break;
         default:
           break;
@@ -623,6 +641,184 @@ export class Event extends React.Component<IEventProps, IEventState> {
     }
   }
 
+  // ::::::: Edited By @Dhyey Sojitra ::::::::
+
+  // Outlook event create
+  public async addOutlookEvent() {
+    //StartDate Formatting
+    console.log(this.state.startDate);
+    let StartDate = moment(this.state.startDate).format("YYYY-MM-DDTHH:mm:ss");
+
+    // EndDate
+    let EndDate = moment(this.state.endDate).format("YYYY-MM-DDTHH:mm:ss");
+    let Subject = this.state.eventData.title;
+    // let Location = this.state.eventData.location;
+    let Attendees = this.state.eventData.attendes;
+
+    let desc = this.state.eventData.Description;
+    let alldayevent = this.state.eventData.fAllDayEvent;
+
+    // Getting all attendees name & email in ArrayofAttendees in json format
+    let ArrayofAttendees = [];
+    for (const attendee of Attendees) {
+      try {
+        const userData = await this.spService.getnames(attendee);
+        // console.log("User Name: " + userData.Title);
+        // console.log("User Email: " + userData.Email);
+        ArrayofAttendees.push({
+          emailAddress: {
+            address: userData.Email,
+            name: userData.Title,
+          },
+          type: "required",
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    // console.log(ArrayofAttendees);
+
+    // creating event in Json
+    const Event = {
+      subject: Subject,
+      body: {
+        contentType: "HTML",
+        content: desc,
+      },
+      start: {
+        dateTime: new Date(StartDate),
+        timeZone: "India Standard Time",
+      },
+      end: {
+        dateTime: new Date(EndDate),
+        timeZone: "India Standard Time",
+      },
+      // location: { displayName: "Office" },
+      isAllDay: alldayevent,
+      attendees: ArrayofAttendees,
+      // allowNewTimeProposals: true,
+      // transactionId: "7E163156-7762-4BEB-A1C6-729EA81755A7",
+    };
+
+    // console.log("Event Data in Json Format:" + JSON.stringify(event));
+    // console.log("Event Data: " + this.state.eventData);
+
+    // :::: Tested Working ::::
+
+    await this.props.context.msGraphClientFactory
+      .getClient()
+      .then((client: MSGraphClient) => {
+        client.api("me/events").post(Event);
+      })
+      .then(() => {
+        console.log("New Event Created...");
+      })
+      .catch((err) => {
+        console.log(err);
+        console.log("Error in Creating Event!...");
+      });
+  }
+
+  // Outlook event update
+
+  public async updateOutlookEvent() {
+    console.log("Event before updateOutlookEvent", this.state.eventData);
+
+    let StartDate = moment(this.state.startDate).format("YYYY-MM-DDTHH:mm:ss");
+
+    // EndDate Formatting
+    let EndDate = moment(this.state.endDate).format("YYYY-MM-DDTHH:mm:ss");
+    let Subject = this.state.eventData.title;
+    // let Location = this.state.eventData.location;
+    let Attendees = this.state.eventData.attendes;
+
+    let desc = this.state.eventData.Description;
+    let alldayevent = this.state.eventData.fAllDayEvent;
+
+    // Getting all attendees name & email in ArrayofAttendees in json format
+    let ArrayofAttendees = [];
+    for (const attendee of Attendees) {
+      try {
+        const userData = await this.spService.getnames(attendee);
+        // console.log("User Name: " + userData.Title);
+        // console.log("User Email: " + userData.Email);
+        ArrayofAttendees.push({
+          emailAddress: {
+            address: userData.Email,
+            name: userData.Title,
+          },
+          type: "required",
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    }
+    // console.log(ArrayofAttendees);
+
+    // creating event in Json
+    const Event = {
+      subject: Subject,
+      body: {
+        contentType: "HTML",
+        content: desc,
+      },
+      start: {
+        dateTime: new Date(StartDate),
+        timeZone: "India Standard Time",
+      },
+      end: {
+        dateTime: new Date(EndDate),
+        timeZone: "India Standard Time",
+      },
+      // location: { displayName: "Office" },
+      isAllDay: alldayevent,
+      attendees: ArrayofAttendees,
+      // allowNewTimeProposals: true,
+      // transactionId: "7E163156-7762-4BEB-A1C6-729EA81755A7",
+    };
+
+    console.log(
+      "Event Data in Json Format aS Updated:" + JSON.stringify(Event)
+    );
+
+    // :::: Tested Working ::::
+    const eventId = this.state.eventData.id;
+    await this.props.context.msGraphClientFactory
+      .getClient()
+      .then((client: MSGraphClient) => {
+        client.api(`/me/events/${eventId}`).update(Event);
+      })
+      .then(() => {
+        console.log("Event Updated...");
+      })
+      .catch((err) => {
+        console.log(err);
+        console.log("Error in Updating Event!...");
+      });
+  }
+
+  // Outlook event delete
+  public async outlookEventDelete() {
+    console.log("outlookEventDelete called...");
+
+    const eventId = this.state.eventData.id;
+    console.log(eventId);
+
+    await this.props.context.msGraphClientFactory
+      .getClient()
+      .then((client: MSGraphClient) => {
+        client.api(`/me/events/${eventId}`).delete();
+      })
+      .then(() => {
+        console.log("Event Deleted...");
+      })
+      .catch((err) => {
+        console.log(err);
+        console.log("Error in deleting Event!...");
+      });
+  }
+
+  // ::::::::::::::::::::
   /**
    * @private
    * @returns
@@ -654,7 +850,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
           this.state.userPermissions.hasPermissionEdit) && ( */}
         <PrimaryButton
           // disabled={this.state.disableButton}
-          // onClick={this.onSave}
+          onClick={this.onSave}
           style={{ marginBottom: "15px", marginRight: "8px", float: "right" }}
         >
           {strings.SaveButtonLabel}
@@ -1537,7 +1733,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                 )}
                 <DialogFooter>
                   <PrimaryButton
-                    // onClick={this.confirmDelete}
+                    onClick={this.confirmDelete}
                     text={strings.DialogConfirmDeleteLabel}
                     // disabled={this.state.isDeleting}
                   />

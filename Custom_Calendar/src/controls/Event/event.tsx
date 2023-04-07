@@ -303,7 +303,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
             this.props.siteUrl,
             this.props.listId
           );
-          // this.addOutlookEvent();
+          // this.addOutaddOutlookEvent();
 
           break;
         default:

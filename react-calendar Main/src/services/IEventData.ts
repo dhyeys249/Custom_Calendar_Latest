@@ -1,4 +1,5 @@
 export interface IEventData {
+  id?: number;
   Id?: number;
   ID?: number;
   title: string;

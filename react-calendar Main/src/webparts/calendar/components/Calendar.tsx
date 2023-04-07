@@ -199,7 +199,7 @@ export default class Calendar extends React.Component<
           //   `start/dateTime ge '${threeMonthsAgo.toISOString()}' and end/dateTime ge '${twoYearsFuture.toISOString()}'`
           // )
           .orderby("createdDateTime DESC")
-          .top(50)
+          .top(150)
           // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
             if (err) {
@@ -207,7 +207,7 @@ export default class Calendar extends React.Component<
               return;
             }
 
-            console.log("All Events as res: ", res);
+            // console.log("All Events as res: ", res);
 
             // this.spService.AddOutlookEventstoList(res);
 
@@ -227,6 +227,10 @@ export default class Calendar extends React.Component<
                 .utc(element.end.dateTime)
                 .tz(timezone)
                 .format("YYYY-MM-DD[T]HH:mm:ss");
+
+              // for (const ArrayofAttendess of element.attendees) {
+              //   ArrayofAttendess = element.attendees;
+              // }
 
               lAllEventsData.push({
                 // Id: element.id,
@@ -261,7 +265,7 @@ export default class Calendar extends React.Component<
               });
 
               // Need looping Array here for getting all attendees id.
-              console.log("Attendees: ", element.attendees);
+
               // console.log("Categories: ", element.categories);
             });
             this.setState({ eventData: lAllEventsData });
@@ -583,9 +587,9 @@ export default class Calendar extends React.Component<
                       showMore: (total) => `+${total} ${strings.showMore}`,
                       work_week: strings.yearHeaderLabel,
                     }}
-                    onView={(views) => {
-                      console.log(`View changed to: ${views}`);
-                    }}
+                    // onView={(views) => {
+                    //   console.log(`View changed to: ${views}`);
+                    // }}
                   />
                 </div>
               )}
