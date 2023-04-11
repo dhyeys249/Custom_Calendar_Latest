@@ -88,7 +88,7 @@ export default class spservices {
         Title: newEvent.title,
         Description: newEvent.Description,
         // Geolocation: newEvent.geolocation,
-        ParticipantsPickerId: { results: newEvent.attendes },
+        ParticipantsPickerId: { results: newEvent.attendesID },
         EventDate: await this.getUtcTime(newEvent.EventDate),
         EndDate: await this.getUtcTime(newEvent.EndDate),
         Location: newEvent.location,
@@ -176,7 +176,7 @@ export default class spservices {
         ownerInitial: "",
         color: "",
         ownerName: event.Author.Title,
-        attendes: event.ParticipantsPickerId,
+        attendesID: event.ParticipantsPickerId,
         fAllDayEvent: event.fAllDayEvent,
         // geolocation: {
         //   Longitude: event.Geolocation ? event.Geolocation.Longitude : 0,
@@ -226,7 +226,7 @@ export default class spservices {
         Title: updateEvent.title,
         Description: updateEvent.Description,
         // Geolocation: updateEvent.geolocation,
-        ParticipantsPickerId: { results: updateEvent.attendes },
+        ParticipantsPickerId: { results: updateEvent.attendesID },
         EventDate: new Date(eventDate),
         EndDate: new Date(endDate),
         Location: updateEvent.location,
@@ -392,6 +392,22 @@ export default class spservices {
     }
     return results;
   }
+
+  public async getIdByUserEmail(userEmail, siteUrl) {
+    try {
+      // const web = new Web(siteUrl);
+      // const user = await web.ensureUser(userEmail);
+      // return user.data.Id;
+      // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+      // const web = new Web(siteUrl);
+      // const user = await web.ensureUser(userEmail);
+      // const userId = user.data.Id;
+      // return userId;
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  }
+
   /**
    *
    * @param {string} loginName
@@ -665,7 +681,7 @@ export default class spservices {
                 ? CategoryColorValue[0].color
                 : "#1a75ff", // blue default
             ownerName: event.Author[0].title,
-            attendes: attendees,
+            // attendes: attendees,
             fAllDayEvent: isAllDayEvent,
             geolocation: {
               Longitude: parseFloat(geolocation[0]),

@@ -59,7 +59,7 @@ import { Event } from "../../../controls/Event/event";
 import { IPanelModelEnum } from "../../../controls/Event/IPanelModeEnum";
 import { IEventData } from "./../../../services/IEventData";
 // import { IUserPermissions } from "./../../../services/IUserPermissions";
-import { Views } from "@pnp/pnpjs";
+// import { Views } from "@pnp/pnpjs";
 import { event } from "jquery";
 
 //const localizer = BigCalendar.momentLocalizer(moment);
@@ -107,6 +107,26 @@ export default class Calendar extends React.Component<
    * @memberof Calendar
    */
   private onSelectEvent(event: any) {
+    // this.props.context.msGraphClientFactory
+    //   .getClient()
+    //   .then((client: MSGraphClient) => {
+    //     client
+    //       .api("/users")
+    //       .filter(`mail eq '${event.attendeesEmail}'`)
+    //       .select("id")
+    //       .get((err, res) => {
+    //         if (err) {
+    //           console.error("Error while getting user by email:", err);
+    //           return;
+    //         }
+
+    //         const user = res.value[0]; // assuming only one user with the given email
+    //         const attendeesID = user.id;
+
+    //         console.log("User ID:", attendeesID);
+    //       });
+    //   });
+
     this.setState({
       showDialog: true,
       selectedEvent: event,
@@ -178,28 +198,27 @@ export default class Calendar extends React.Component<
       array = [];
     let index = 0;
     const now = new Date();
-    const threeMonthsAgo = new Date();
+    const sixMonthsAgo = new Date();
     const twoYearsFuture = new Date();
-    twoYearsFuture.setMonth(now.getMonth() + 24);
-    threeMonthsAgo.setMonth(now.getMonth() - 3);
+    twoYearsFuture.setFullYear(now.getFullYear() + 2);
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
     // console.log(
     //   "Three months ago: " +
     //     threeMonthsAgo +
     //     "two years future: " +
     //     twoYearsFuture
     // );
+    const filterstatement = `start/dateTime ge '${sixMonthsAgo.toISOString()}' and start/dateTime le '${twoYearsFuture.toISOString()}'`;
+    console.log(filterstatement);
     const filterDate = new Date().toISOString();
     this.props.context.msGraphClientFactory
       .getClient()
       .then((client: MSGraphClient) => {
         client
           .api("me/calendar/events")
-
-          // .filter(
-          //   `start/dateTime ge '${threeMonthsAgo.toISOString()}' and end/dateTime ge '${twoYearsFuture.toISOString()}'`
-          // )
-          .orderby("createdDateTime DESC")
-          .top(150)
+          .filter(filterstatement)
+          // .orderby("createdDateTime")
+          .top(5000)
           // .select("subject,organizer,start,end")
           .get((err, res?: any) => {
             if (err) {
@@ -207,13 +226,50 @@ export default class Calendar extends React.Component<
               return;
             }
 
-            // console.log("All Events as res: ", res);
+            console.log("All Events as res: ", res);
 
             // this.spService.AddOutlookEventstoList(res);
 
             res.value.forEach(async (element, i) => {
               // console.log("Events: ", element);
               index = i;
+
+              // Getting email address of attendess
+              const attendeesEmail = [];
+              for (let j = 0; j < element.attendees.length; j++) {
+                attendeesEmail.push(element.attendees[j].emailAddress.address);
+              }
+
+              //getting id of attendess
+              // try {
+              //   // const attendeesID = await this.spService.getIdByUserEmail(
+              //   //   attendeesEmail,
+              //   //   this.props.siteUrl
+              //   // );
+              //   // console.log(attendeesID);
+              //   // ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+              //   // this.props.context.msGraphClientFactory
+              //   //   .getClient()
+              //   //   .then((client: MSGraphClient) => {
+              //   //     client
+              //   //       .api("/users")
+              //   //       .filter(`mail eq '${attendeesEmail}'`)
+              //   //       .select("id")
+              //   //       .get((err, res) => {
+              //   //         if (err) {
+              //   //           console.error(err);
+              //   //           return;
+              //   //         }
+              //   //         const attendeesID = res.value[0].id;
+              //   //         console.log(
+              //   //           `User ID for email ${attendeesEmail}: ${attendeesID}`
+              //   //         );
+              //   //       });
+              //   //   });
+              // } catch (err) {
+              //   console.log(err);
+              // }
+
               // console.log(element.subject);
               const timezone = "Asia/Kolkata";
               // console.log("sD before format", element.start.dateTime);
@@ -248,20 +304,57 @@ export default class Calendar extends React.Component<
                 // ownerEmail: element.organizer.emailAddress.address,
                 ownerName: element.organizer.emailAddress.name,
                 fAllDayEvent: element.isAllDay,
-                attendees: element.attendees,
+                attendes: element.attendees,
+                attendeesID: element.attendeesID,
+                attendessEmail: attendeesEmail,
                 geolocation: element.locations.displayName,
                 // Category: element.categories,
                 Category: "Test",
                 // Duration: 500,
                 // RecurrenceData: "",
                 fRecurrence: element.recurrence,
+                // Rpattern: element.recurrence.pattern,
                 EventType: "1",
                 iCalUId: element.iCalUId,
                 UID: element.iCalUId,
-                RecurrenceID: element.RecurrenceID
-                  ? element.RecurrenceID
-                  : undefined,
+                // RecurrenceID: element.RecurrenceID
+                //   ? element.RecurrenceID
+                //   : undefined,
                 MasterSeriesItemID: element.seriesMasterId,
+                // numberOfOccurrences:
+                //   element.recurrence.range.numberOfOccurrences,
+                // recurrenceInterval:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.pattern.interval
+                //     : "",
+                // recurrenceRangeNumber:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.range.numberOfOccurrences
+                //     : "",
+                // recurrenceRangeType:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.range.type
+                //     : "",
+                // recurrenceStartTime:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.range.startDate
+                //     : "",
+                // recurrenceEndTime:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.range.endDate
+                //     : "",
+                // recurrenceTimeZone:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.range.recurrenceTimeZone
+                //     : "",
+                // recurrencePattern:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.pattern
+                //     : "",
+                // recurrencePatternType:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.pattern.type
+                //     : "",
               });
 
               // Need looping Array here for getting all attendees id.
@@ -269,28 +362,131 @@ export default class Calendar extends React.Component<
               // console.log("Categories: ", element.categories);
             });
             this.setState({ eventData: lAllEventsData });
+
             console.log("eventData:", this.state.eventData);
           });
       });
-
-    // this.context.msGraphClientFactory
-    //   .getClient()
-    //   .then((client: MSGraphClient) => {
-    //     client
-    //       .api("me/events")
-    //       .version("v1.0")
-    //       .select("subject,organizer,start,end")
-    //       .get((error, response: any, rawResponse?: any) => {
-    //         if (error) {
-    //           console.log(error);
-    //           return;
-    //         }
-    //         const events: MicrosoftGraph.Event[] = response.value;
-    //         console.log(events);
-    //       });
-    //   });
   }
 
+  // public async loadOutlookEvents() {
+  //   const now = new Date();
+  //   const sixMonthsAgo = new Date();
+  //   sixMonthsAgo.setMonth(now.getMonth() - 6);
+
+  //   const twoYearsFuture = new Date();
+  //   twoYearsFuture.setMonth(now.getMonth() + 24);
+
+  //   try {
+  //     const res = await this.props.context.msGraphClientFactory
+  //       .getClient()
+  //       .then((client: MSGraphClient) =>
+  //         client
+  //           .api("me/events")
+  //           .filter(
+  //             `start/dateTime ge '${sixMonthsAgo.toISOString()}' and end/dateTime le '${twoYearsFuture.toISOString()}'`
+  //           )
+  //           .orderby("createdDateTime DESC")
+  //           .top(500)
+  //           .select(
+  //             "id,subject,bodyPreview,location,start,end,isAllDay,attendees,recurrence,iCalUId,seriesMasterId"
+  //           )
+  //           .get()
+  //       );
+  //     // recurrenceRangeNumber,recurrenceRangeType,numberOfOccurrences,recurrenceInterval,recurrenceTimeZone,recurrenceStartTime,recurrenceEndTime,recurrencePattern
+  //     const lAllEventsData: IEventData[] = [];
+
+  //     res.value.forEach((element) => {
+  //       const startDate =
+  //         element.start.dateTime !== undefined
+  //           ? element.start.dateTime
+  //           : element.start.date;
+  //       const endDate =
+  //         element.end.dateTime !== undefined
+  //           ? element.end.dateTime
+  //           : element.end.date;
+  //       const attendeesEmail: string[] = [];
+
+  //       if (element.attendees !== undefined) {
+  //         element.attendees.forEach((attendee) => {
+  //           attendeesEmail.push(attendee.emailAddress.address);
+  //         });
+  //       }
+
+  //       lAllEventsData.push({
+  //         id: element.id,
+  //         title: element.subject,
+  //         Description: element.bodyPreview,
+  //         location: element.location.displayName,
+  //         EventDate: new Date(startDate),
+  //         EndDate: new Date(endDate),
+  //         // ownerName: element.organizer.emailAddress.name,
+  //         fAllDayEvent: element.isAllDay,
+  //         attendes: element.attendes,
+  //         attendesID: [], // To be populated later
+  //         attendesEmail: attendeesEmail,
+  //         geolocation:
+  //           element.locations !== undefined
+  //             ? element.locations.displayName
+  //             : "",
+  //         Category: "",
+  //         fRecurrence: element.recurrence !== undefined,
+  //         Rpattern:
+  //           element.recurrence !== undefined ? element.recurrence.pattern : "",
+  //         EventType: "1",
+  //         iCalUId: element.iCalUId,
+  //         UID: element.iCalUId,
+  //         RecurrenceID: element.recurrenceRangeNumber,
+  //         MasterSeriesItemID: element.seriesMasterId,
+  //         numberOfOccurrences: element.numberOfOccurrences,
+  //         recurrenceInterval:
+  //           element.recurrence !== undefined ? element.recurrence.interval : "",
+  //         // recurrenceRangeNumber:
+  //         //   element.recurrence !== undefined
+  //         //     ? element.recurrence.range.numberOfOccurrences
+  //         //     : "",
+  //         recurrenceRangeType:
+  //           element.recurrence !== undefined
+  //             ? element.recurrence.range.type
+  //             : "",
+  //         recurrenceStartTime:
+  //           element.recurrence !== undefined
+  //             ? element.recurrence.range.startDate
+  //             : "",
+  //         recurrenceEndTime:
+  //           element.recurrence !== undefined
+  //             ? element.recurrence.range.endDate
+  //             : "",
+  //         recurrenceTimeZone:
+  //           element.recurrence !== undefined
+  //             ? element.recurrence.range.recurrenceTimeZone
+  //             : "",
+  //         recurrencePattern:
+  //           element.recurrence !== undefined ? element.recurrence.pattern : "",
+  //       });
+
+  //       // Need looping Array here for getting all attendees id.
+  //       const getAttendeesID = async () => {
+  //         for (const attendee of element.attendees) {
+  //           const userInfo: any = await this.spService.getIdByUserEmail(
+  //             attendee.emailAddress.address,
+  //             this.props.siteUrl
+  //           );
+  //           lAllEventsData[lAllEventsData.length - 1].attendesID.push(
+  //             Number(userInfo.Id)
+  //           );
+  //         }
+  //       };
+  //       getAttendeesID();
+
+  //       // console.log("Categories: ", element.categories);
+  //     });
+
+  //     this.setState({ eventData: lAllEventsData });
+  //     console.log("eventData:", this.state.eventData);
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // }
   /**
    * @memberof Calendar
    */

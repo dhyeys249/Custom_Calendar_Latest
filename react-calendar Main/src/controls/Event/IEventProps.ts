@@ -8,7 +8,7 @@ export interface IEventProps {
   showPanel: boolean;
   startDate?: Date;
   endDate?: Date;
-  context: WebPartContext;
+  context: any;
   siteUrl: string;
   listId: string;
 }

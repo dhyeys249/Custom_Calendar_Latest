@@ -39,11 +39,11 @@ import draftToHtml from "draftjs-to-html";
 import htmlToDraft from "html-to-draftjs";
 import "react-draft-wysiwyg/dist/react-draft-wysiwyg.css";
 import spservices from "../../services/spservices";
-import { Map, ICoordinates, MapType } from "@pnp/spfx-controls-react/lib/Map";
+// import { Map, ICoordinates, MapType } from "@pnp/spfx-controls-react/lib/Map";
 import { EventRecurrenceInfo } from "../../controls/EventRecurrenceInfo/EventRecurrenceInfo";
 import { getGUID } from "@pnp/common";
 import { toLocaleShortDateString } from "../../utils/dateUtils";
-import { sp } from "@pnp/pnpjs";
+import { log, sp } from "@pnp/pnpjs";
 import {
   SPHttpClient,
   SPHttpClientResponse,
@@ -179,7 +179,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
     this.onSave = this.onSave.bind(this);
     this.onSelectDateEnd = this.onSelectDateEnd.bind(this);
     this.onSelectDateStart = this.onSelectDateStart.bind(this);
-    this.onUpdateCoordinates = this.onUpdateCoordinates.bind(this);
+    // this.onUpdateCoordinates = this.onUpdateCoordinates.bind(this);
     this.onGetErrorMessageTitle = this.onGetErrorMessageTitle.bind(this);
     this.getPeoplePickerItems = this.getPeoplePickerItems.bind(this);
     this.hidePanel = this.hidePanel.bind(this);
@@ -276,9 +276,9 @@ export class Event extends React.Component<IEventProps, IEventState> {
     // eventData.location = "N/A";
 
     // get Attendees
-    if (!eventData.attendes) {
+    if (!eventData.attendesID) {
       //vinitialize if no attendees
-      eventData.attendes = [];
+      eventData.attendesID = [];
     }
 
     // Get Descript from RichText Compoment
@@ -292,7 +292,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
           user.id,
           this.props.siteUrl
         );
-        eventData.attendes.push(Number(userInfo.Id));
+        eventData.attendesID.push(Number(userInfo.Id));
       }
 
       this.setState({ isSaving: true });
@@ -304,7 +304,6 @@ export class Event extends React.Component<IEventProps, IEventState> {
           //   this.props.siteUrl,
           //   this.props.listId
           // );
-          console.log("eventData Before updateOutlookEvent:", eventData);
           this.updateOutlookEvent();
           break;
         case IPanelModelEnum.add:
@@ -313,7 +312,6 @@ export class Event extends React.Component<IEventProps, IEventState> {
           //   this.props.siteUrl,
           //   this.props.listId
           // );
-          console.log("eventData Before addOutlookEvent:", eventData);
           this.addOutlookEvent();
           break;
         default:
@@ -402,21 +400,39 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
       // testa  attendees
       console.log(event);
-      console.log(this.state.eventData.attendes);
-      const attendees = this.state.eventData.attendes;
+      console.log(event.attendes);
+      let AllAttandes = event.attendes;
       let selectedUsers: string[] = [];
-      if (attendees && attendees.length > 0) {
-        for (const userId of attendees) {
-          let user: any = await this.spService.getUserById(
-            userId,
-            this.props.siteUrl
-          );
-          if (user) {
-            selectedUsers.push(user.UserPrincipalName);
-            console.log(user);
-          }
-        }
+
+      for (const val of AllAttandes) {
+        selectedUsers.push(val.emailAddress.address);
       }
+
+      // if (attendees && attendees.length > 0) {
+      //   for (const userId of attendees) {
+      //     let user: any = await this.spService.getUserById(
+      //       userId,
+      //       this.props.siteUrl
+      //     );
+      //     if (user) {
+      //       selectedUsers.push(user.UserPrincipalName);
+      //       console.log("users: ", user);
+      //     }
+      //   }
+      // }
+
+      // await this.props.context.msGraphClientFactory
+      //   .getClient()
+      //   .then((client: MSGraphClient) => {
+      //     client
+      //       .api(`/users/${email}`)
+      //       .get()
+      //       .then((result) => {
+      //         const userId = result.id;
+      //         console.log(`User ID for ${email} is ${userId}`);
+      //       });
+      //   });
+
       // Has geolocation ?
       // this.latitude =
       //   event.geolocation && event.geolocation.Latitude
@@ -446,7 +462,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
         endSelectedHour: { key: endHour, text: endHour },
         endSelectedMin: { key: endMin, text: endMin },
         editorState: editorState,
-        // selectedUsers: selectedUsers,
+        selectedUsers: selectedUsers,
         // userPermissions: userListPermissions,
         isloading: false,
         // siteRegionalSettings: siteRegionalSettings,
@@ -646,14 +662,27 @@ export class Event extends React.Component<IEventProps, IEventState> {
   // Outlook event create
   public async addOutlookEvent() {
     //StartDate Formatting
-    console.log(this.state.startDate);
-    let StartDate = moment(this.state.startDate).format("YYYY-MM-DDTHH:mm:ss");
+
+    let StartDate =
+      moment(this.state.startDate).format("YYYY-MM-DD") +
+      "T" +
+      this.state.startSelectedHour.key +
+      ":" +
+      this.state.startSelectedMin.key +
+      ":00";
 
     // EndDate
-    let EndDate = moment(this.state.endDate).format("YYYY-MM-DDTHH:mm:ss");
+    let EndDate =
+      moment(this.state.startDate).format("YYYY-MM-DD") +
+      "T" +
+      this.state.endSelectedHour.key +
+      ":" +
+      this.state.endSelectedMin.key +
+      ":00";
+
     let Subject = this.state.eventData.title;
     // let Location = this.state.eventData.location;
-    let Attendees = this.state.eventData.attendes;
+    let Attendees = this.state.eventData.attendesID;
 
     let desc = this.state.eventData.Description;
     let alldayevent = this.state.eventData.fAllDayEvent;
@@ -676,6 +705,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
         console.log(err);
       }
     }
+
     // console.log(ArrayofAttendees);
 
     // creating event in Json
@@ -700,9 +730,6 @@ export class Event extends React.Component<IEventProps, IEventState> {
       // transactionId: "7E163156-7762-4BEB-A1C6-729EA81755A7",
     };
 
-    // console.log("Event Data in Json Format:" + JSON.stringify(event));
-    // console.log("Event Data: " + this.state.eventData);
-
     // :::: Tested Working ::::
 
     await this.props.context.msGraphClientFactory
@@ -711,7 +738,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
         client.api("me/events").post(Event);
       })
       .then(() => {
-        console.log("New Event Created...");
+        console.log("New Event Created... with data: ", Event);
       })
       .catch((err) => {
         console.log(err);
@@ -723,14 +750,26 @@ export class Event extends React.Component<IEventProps, IEventState> {
 
   public async updateOutlookEvent() {
     console.log("Event before updateOutlookEvent", this.state.eventData);
-
-    let StartDate = moment(this.state.startDate).format("YYYY-MM-DDTHH:mm:ss");
-
+    // StartDate Formatting
+    let StartDate =
+      moment(this.state.startDate).format("YYYY-MM-DD") +
+      "T" +
+      this.state.startSelectedHour.key +
+      ":" +
+      this.state.startSelectedMin.key +
+      ":00";
     // EndDate Formatting
-    let EndDate = moment(this.state.endDate).format("YYYY-MM-DDTHH:mm:ss");
+    let EndDate =
+      moment(this.state.startDate).format("YYYY-MM-DD") +
+      "T" +
+      this.state.endSelectedHour.key +
+      ":" +
+      this.state.endSelectedMin.key +
+      ":00";
+
     let Subject = this.state.eventData.title;
     // let Location = this.state.eventData.location;
-    let Attendees = this.state.eventData.attendes;
+    let Attendees = this.state.eventData.attendesID;
 
     let desc = this.state.eventData.Description;
     let alldayevent = this.state.eventData.fAllDayEvent;
@@ -891,20 +930,20 @@ export class Event extends React.Component<IEventProps, IEventState> {
    * @param {ICoordinates} coordinates
    * @memberof Event
    */
-  private async onUpdateCoordinates(coordinates: ICoordinates) {
-    this.latitude = coordinates.latitude;
-    this.longitude = coordinates.longitude;
-    const locationInfo = await this.spService.getGeoLactionName(
-      this.latitude,
-      this.longitude
-    );
-    this.setState({
-      eventData: {
-        ...this.state.eventData,
-        location: locationInfo.display_name,
-      },
-    });
-  }
+  // private async onUpdateCoordinates(coordinates: ICoordinates) {
+  //   this.latitude = coordinates.latitude;
+  //   this.longitude = coordinates.longitude;
+  //   const locationInfo = await this.spService.getGeoLactionName(
+  //     this.latitude,
+  //     this.longitude
+  //   );
+  //   this.setState({
+  //     eventData: {
+  //       ...this.state.eventData,
+  //       location: locationInfo.display_name,
+  //     },
+  //   });
+  // }
 
   /**
    *
@@ -1658,13 +1697,16 @@ export class Event extends React.Component<IEventProps, IEventState> {
               <div>
                 <PeoplePicker
                   webAbsoluteUrl={this.props.siteUrl}
+                  // groupName="Calendar User"
+                  groupId="dd8a8c9a-9b34-4851-9093-9c3537807c48"
                   context={this.props.context}
                   titleText={strings.AttendeesLabel}
                   principalTypes={[PrincipalType.User]}
                   resolveDelay={1000}
+                  // ensureUser={true}
                   showtooltip={true}
-                  selectedItems={this.getPeoplePickerItems}
-                  personSelectionLimit={10}
+                  onChange={this.getPeoplePickerItems}
+                  personSelectionLimit={100}
                   defaultSelectedUsers={this.state.selectedUsers}
                   // disabled={
                   //   this.state.userPermissions.hasPermissionAdd ||

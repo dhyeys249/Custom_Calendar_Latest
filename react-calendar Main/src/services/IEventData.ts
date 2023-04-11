@@ -13,14 +13,27 @@ export interface IEventData {
   ownerEmail?: string;
   ownerName?: string;
   fAllDayEvent?: boolean;
-  attendes?: number[];
+  attendes?: any[];
+  attendesID?: number[];
+  attendesEmail?: string[];
   geolocation?: { Longitude: number; Latitude: number };
   Category?: string;
   Duration?: number;
   RecurrenceData?: string;
   fRecurrence?: string | boolean;
   EventType?: string;
+  iCalUId?: string;
   UID?: string;
   RecurrenceID?: Date;
   MasterSeriesItemID?: string;
+  Rpattern?: [];
+  numberOfOccurrences?: number;
+  recurrenceInterval?: number;
+  recurrenceRangeNumber?: number;
+  recurrenceRangeType?: number;
+  recurrenceStartTime?: Date;
+  recurrenceEndTime?: Date;
+  recurrenceTimeZone?: string;
+  recurrencePattern?: string;
+  recurrencePatternType?: string;
 }
