@@ -122,7 +122,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
     endDate: Date;
   } = undefined;
 
-  private categoryDropdownOption: IDropdownOption[] = [];
+  // private categoryDropdownOption: IDropdownOption[] = [];
 
   public constructor(props) {
     super(props);
@@ -1321,6 +1321,13 @@ export class Event extends React.Component<IEventProps, IEventState> {
   public render(): React.ReactElement<IEventProps> {
     const { editorState } = this.state;
 
+    // let Type: boolean;
+    // if (this.state.eventData.Type !== "seriesMaster" || undefined) {
+    //   Type = false;
+    // } else {
+    //   Type = true;
+    // }
+
     // console.log("this.state.endDate:", this.state.endDate);
     // console.log("this.state.eventData.EndDate:", this.state.eventData.EndDate);
     return (
@@ -1343,7 +1350,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
             {!this.state.isloading && ( */}
             <div>
               {this.state.eventData &&
-              this.state.eventData.EventType !== "0" &&
+              this.state.eventData.Type === "seriesMaster" &&
               this.state.showRecurrenceSeriesInfo !== true ? (
                 <div>
                   <h2 style={{ display: "inline-block", verticalAlign: "top" }}>
@@ -1386,7 +1393,9 @@ export class Event extends React.Component<IEventProps, IEventState> {
                 />
               </div>
               <div>
-                <Dropdown
+                {/* Dropdown for categories */}
+
+                {/* <Dropdown
                   label={strings.CategoryLabel}
                   selectedKey={
                     this.state.eventData && this.state.eventData.Category
@@ -1402,7 +1411,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                   //     ? false
                   //     : true
                   // }
-                />
+                /> */}
               </div>
               <div
                 style={{
@@ -1642,7 +1651,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
               </div>
               <br />
 
-              {this.state.eventData && this.state.eventData.EventType == "0" ? (
+              {this.state.eventData && this.state.eventData.Type == "0" ? (
                 <div
                   style={{
                     display: "inline-block",
@@ -1673,7 +1682,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                 <EventRecurrenceInfo
                   context={this.props.context}
                   display={true}
-                  recurrenceData={this.state.eventData.RecurrenceData}
+                  recurrenceData={this.state.eventData.fRecurrence}
                   startDate={this.state.startDate}
                   siteUrl={this.props.siteUrl}
                   returnRecurrenceData={this.returnRecurrenceInfo}
@@ -1698,6 +1707,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                 <PeoplePicker
                   webAbsoluteUrl={this.props.siteUrl}
                   // groupName="Calendar User"
+                  // groupName=""
                   groupId="dd8a8c9a-9b34-4851-9093-9c3537807c48"
                   context={this.props.context}
                   titleText={strings.AttendeesLabel}
@@ -1706,7 +1716,7 @@ export class Event extends React.Component<IEventProps, IEventState> {
                   // ensureUser={true}
                   showtooltip={true}
                   onChange={this.getPeoplePickerItems}
-                  personSelectionLimit={100}
+                  // personSelectionLimit={100}
                   defaultSelectedUsers={this.state.selectedUsers}
                   // disabled={
                   //   this.state.userPermissions.hasPermissionAdd ||

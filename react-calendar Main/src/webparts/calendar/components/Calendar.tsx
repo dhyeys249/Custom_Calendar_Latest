@@ -208,6 +208,9 @@ export default class Calendar extends React.Component<
     //     "two years future: " +
     //     twoYearsFuture
     // );
+
+    // const filterstatement = `(recurrence eq null or type eq 'seriesMaster')`;
+
     const filterstatement = `start/dateTime ge '${sixMonthsAgo.toISOString()}' and start/dateTime le '${twoYearsFuture.toISOString()}'`;
     console.log(filterstatement);
     const filterDate = new Date().toISOString();
@@ -303,7 +306,7 @@ export default class Calendar extends React.Component<
                 // ownerPhoto: "#",
                 // ownerEmail: element.organizer.emailAddress.address,
                 ownerName: element.organizer.emailAddress.name,
-                fAllDayEvent: element.isAllDay,
+                fAllDayEvent: element !== null ? element.isAllDay : "",
                 attendes: element.attendees,
                 attendeesID: element.attendeesID,
                 attendessEmail: attendeesEmail,
@@ -311,56 +314,54 @@ export default class Calendar extends React.Component<
                 // Category: element.categories,
                 Category: "Test",
                 // Duration: 500,
-                // RecurrenceData: "",
-                fRecurrence: element.recurrence,
-                // Rpattern: element.recurrence.pattern,
+
+                fRecurrence: element !== null ? element.recurrence : "",
+
+                // Rpattern:
+                //   element.recurrence !== undefined
+                //     ? element.recurrence.pattern
+                //     : "",
+                Type: element.type,
                 EventType: "1",
                 iCalUId: element.iCalUId,
                 UID: element.iCalUId,
                 // RecurrenceID: element.RecurrenceID
                 //   ? element.RecurrenceID
                 //   : undefined,
-                MasterSeriesItemID: element.seriesMasterId,
-                // numberOfOccurrences:
-                //   element.recurrence.range.numberOfOccurrences,
-                // recurrenceInterval:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.pattern.interval
-                //     : "",
-                // recurrenceRangeNumber:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.range.numberOfOccurrences
-                //     : "",
-                // recurrenceRangeType:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.range.type
-                //     : "",
-                // recurrenceStartTime:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.range.startDate
-                //     : "",
-                // recurrenceEndTime:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.range.endDate
-                //     : "",
-                // recurrenceTimeZone:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.range.recurrenceTimeZone
-                //     : "",
-                // recurrencePattern:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.pattern
-                //     : "",
-                // recurrencePatternType:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.pattern.type
-                //     : "",
+                // MasterSeriesItemID: element.seriesMasterId,
+                recurrenceInterval:
+                  element.recurrence !== null
+                    ? element.recurrence.pattern.interval
+                    : "",
+                recurrenceRangeNumber:
+                  element.recurrence !== null
+                    ? element.recurrence.range.numberOfOccurrences
+                    : "",
+                recurrenceRangeType:
+                  element.recurrence !== null
+                    ? element.recurrence.range.type
+                    : "",
+                recurrenceStartTime:
+                  element.recurrence !== null
+                    ? element.recurrence.range.startDate
+                    : "",
+                recurrenceEndTime:
+                  element.recurrence !== null
+                    ? element.recurrence.range.endDate
+                    : "",
+                recurrenceTimeZone:
+                  element.recurrence !== null
+                    ? element.recurrence.range.recurrenceTimeZone
+                    : "",
+                recurrencePattern:
+                  element.recurrence !== null ? element.recurrence.pattern : "",
+                recurrencePatternType:
+                  element.recurrence !== null
+                    ? element.recurrence.pattern.type
+                    : "",
               });
-
-              // Need looping Array here for getting all attendees id.
-
-              // console.log("Categories: ", element.categories);
             });
+
             this.setState({ eventData: lAllEventsData });
 
             console.log("eventData:", this.state.eventData);
@@ -368,125 +369,6 @@ export default class Calendar extends React.Component<
       });
   }
 
-  // public async loadOutlookEvents() {
-  //   const now = new Date();
-  //   const sixMonthsAgo = new Date();
-  //   sixMonthsAgo.setMonth(now.getMonth() - 6);
-
-  //   const twoYearsFuture = new Date();
-  //   twoYearsFuture.setMonth(now.getMonth() + 24);
-
-  //   try {
-  //     const res = await this.props.context.msGraphClientFactory
-  //       .getClient()
-  //       .then((client: MSGraphClient) =>
-  //         client
-  //           .api("me/events")
-  //           .filter(
-  //             `start/dateTime ge '${sixMonthsAgo.toISOString()}' and end/dateTime le '${twoYearsFuture.toISOString()}'`
-  //           )
-  //           .orderby("createdDateTime DESC")
-  //           .top(500)
-  //           .select(
-  //             "id,subject,bodyPreview,location,start,end,isAllDay,attendees,recurrence,iCalUId,seriesMasterId"
-  //           )
-  //           .get()
-  //       );
-  //     // recurrenceRangeNumber,recurrenceRangeType,numberOfOccurrences,recurrenceInterval,recurrenceTimeZone,recurrenceStartTime,recurrenceEndTime,recurrencePattern
-  //     const lAllEventsData: IEventData[] = [];
-
-  //     res.value.forEach((element) => {
-  //       const startDate =
-  //         element.start.dateTime !== undefined
-  //           ? element.start.dateTime
-  //           : element.start.date;
-  //       const endDate =
-  //         element.end.dateTime !== undefined
-  //           ? element.end.dateTime
-  //           : element.end.date;
-  //       const attendeesEmail: string[] = [];
-
-  //       if (element.attendees !== undefined) {
-  //         element.attendees.forEach((attendee) => {
-  //           attendeesEmail.push(attendee.emailAddress.address);
-  //         });
-  //       }
-
-  //       lAllEventsData.push({
-  //         id: element.id,
-  //         title: element.subject,
-  //         Description: element.bodyPreview,
-  //         location: element.location.displayName,
-  //         EventDate: new Date(startDate),
-  //         EndDate: new Date(endDate),
-  //         // ownerName: element.organizer.emailAddress.name,
-  //         fAllDayEvent: element.isAllDay,
-  //         attendes: element.attendes,
-  //         attendesID: [], // To be populated later
-  //         attendesEmail: attendeesEmail,
-  //         geolocation:
-  //           element.locations !== undefined
-  //             ? element.locations.displayName
-  //             : "",
-  //         Category: "",
-  //         fRecurrence: element.recurrence !== undefined,
-  //         Rpattern:
-  //           element.recurrence !== undefined ? element.recurrence.pattern : "",
-  //         EventType: "1",
-  //         iCalUId: element.iCalUId,
-  //         UID: element.iCalUId,
-  //         RecurrenceID: element.recurrenceRangeNumber,
-  //         MasterSeriesItemID: element.seriesMasterId,
-  //         numberOfOccurrences: element.numberOfOccurrences,
-  //         recurrenceInterval:
-  //           element.recurrence !== undefined ? element.recurrence.interval : "",
-  //         // recurrenceRangeNumber:
-  //         //   element.recurrence !== undefined
-  //         //     ? element.recurrence.range.numberOfOccurrences
-  //         //     : "",
-  //         recurrenceRangeType:
-  //           element.recurrence !== undefined
-  //             ? element.recurrence.range.type
-  //             : "",
-  //         recurrenceStartTime:
-  //           element.recurrence !== undefined
-  //             ? element.recurrence.range.startDate
-  //             : "",
-  //         recurrenceEndTime:
-  //           element.recurrence !== undefined
-  //             ? element.recurrence.range.endDate
-  //             : "",
-  //         recurrenceTimeZone:
-  //           element.recurrence !== undefined
-  //             ? element.recurrence.range.recurrenceTimeZone
-  //             : "",
-  //         recurrencePattern:
-  //           element.recurrence !== undefined ? element.recurrence.pattern : "",
-  //       });
-
-  //       // Need looping Array here for getting all attendees id.
-  //       const getAttendeesID = async () => {
-  //         for (const attendee of element.attendees) {
-  //           const userInfo: any = await this.spService.getIdByUserEmail(
-  //             attendee.emailAddress.address,
-  //             this.props.siteUrl
-  //           );
-  //           lAllEventsData[lAllEventsData.length - 1].attendesID.push(
-  //             Number(userInfo.Id)
-  //           );
-  //         }
-  //       };
-  //       getAttendeesID();
-
-  //       // console.log("Categories: ", element.categories);
-  //     });
-
-  //     this.setState({ eventData: lAllEventsData });
-  //     console.log("eventData:", this.state.eventData);
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // }
   /**
    * @memberof Calendar
    */
@@ -548,7 +430,8 @@ export default class Calendar extends React.Component<
         {
           // previewImageSrc: event.ownerPhoto,
           previewIconProps: {
-            iconName: event.fRecurrence === "0" ? "Calendar" : "RecurringEvent",
+            iconName:
+              event.fRecurrence !== undefined ? "RecurringEvent" : "Calendar",
             styles: { root: { color: event.color } },
             className: styles.previewEventIcon,
           },

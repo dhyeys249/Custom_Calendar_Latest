@@ -21,6 +21,7 @@ export interface IEventData {
   Duration?: number;
   RecurrenceData?: string;
   fRecurrence?: string | boolean;
+  Type?: string;
   EventType?: string;
   iCalUId?: string;
   UID?: string;
