@@ -291,75 +291,224 @@ export default class Calendar extends React.Component<
               //   ArrayofAttendess = element.attendees;
               // }
 
-              lAllEventsData.push({
-                // Id: element.id,
-                id: element.id,
-                // ID: element.id,
-                title: element.subject,
-                Description: element.bodyPreview,
-                location: element.location.displayName,
-                EventDate: new Date(startDate),
-                EndDate: new Date(endDate),
-                // color: "",
-                // ownerInitial: "",
-                // ownerInitial: element.organizer.emailAddress.name,
-                // ownerPhoto: "#",
-                // ownerEmail: element.organizer.emailAddress.address,
-                ownerName: element.organizer.emailAddress.name,
-                fAllDayEvent: element !== null ? element.isAllDay : "",
-                attendes: element.attendees,
-                attendeesID: element.attendeesID,
-                attendessEmail: attendeesEmail,
-                geolocation: element.locations.displayName,
-                // Category: element.categories,
-                Category: "Test",
-                // Duration: 500,
+              if (element.type === "seriesMaster") {
+                element.forEach((item) => {
+                  console.log("Item >>>>>>>>>>>>>>>>>>>>>", item);
+                });
+                lAllEventsData.push({
+                  // Id: element.id,
+                  id: element.id,
+                  // ID: element.id,
+                  title: element.subject,
+                  Description: element.bodyPreview,
+                  location: element.location.displayName,
+                  EventDate: new Date(startDate),
+                  EndDate: new Date(endDate),
+                  // color: "",
+                  // ownerInitial: "",
+                  // ownerInitial: element.organizer.emailAddress.name,
+                  // ownerPhoto: "#",
+                  // ownerEmail: element.organizer.emailAddress.address,
+                  ownerName: element.organizer.emailAddress.name,
+                  fAllDayEvent: element !== null ? element.isAllDay : "",
+                  attendes: element.attendees,
+                  attendeesID: element.attendeesID,
+                  attendessEmail: attendeesEmail,
+                  geolocation: element.locations.displayName,
+                  // Category: element.categories,
+                  Category: "Test",
+                  // Duration: 500,
 
-                fRecurrence: element !== null ? element.recurrence : "",
+                  fRecurrence: element !== null ? element.recurrence : "",
 
-                // Rpattern:
-                //   element.recurrence !== undefined
-                //     ? element.recurrence.pattern
-                //     : "",
-                Type: element.type,
-                EventType: "1",
-                iCalUId: element.iCalUId,
-                UID: element.iCalUId,
-                // RecurrenceID: element.RecurrenceID
-                //   ? element.RecurrenceID
-                //   : undefined,
-                // MasterSeriesItemID: element.seriesMasterId,
-                recurrenceInterval:
-                  element.recurrence !== null
-                    ? element.recurrence.pattern.interval
-                    : "",
-                recurrenceRangeNumber:
-                  element.recurrence !== null
-                    ? element.recurrence.range.numberOfOccurrences
-                    : "",
-                recurrenceRangeType:
-                  element.recurrence !== null
-                    ? element.recurrence.range.type
-                    : "",
-                recurrenceStartTime:
-                  element.recurrence !== null
-                    ? element.recurrence.range.startDate
-                    : "",
-                recurrenceEndTime:
-                  element.recurrence !== null
-                    ? element.recurrence.range.endDate
-                    : "",
-                recurrenceTimeZone:
-                  element.recurrence !== null
-                    ? element.recurrence.range.recurrenceTimeZone
-                    : "",
-                recurrencePattern:
-                  element.recurrence !== null ? element.recurrence.pattern : "",
-                recurrencePatternType:
-                  element.recurrence !== null
-                    ? element.recurrence.pattern.type
-                    : "",
-              });
+                  // Rpattern:
+                  //   element.recurrence !== undefined
+                  //     ? element.recurrence.pattern
+                  //     : "",
+                  Type: element.type,
+                  EventType: "1",
+                  iCalUId: element.iCalUId,
+                  UID: element.iCalUId,
+                  // RecurrenceID: element.RecurrenceID
+                  //   ? element.RecurrenceID
+                  //   : undefined,
+                  // MasterSeriesItemID: element.seriesMasterId,
+                  recurrenceInterval:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern.interval
+                      : "",
+                  recurrenceRangeNumber:
+                    element.recurrence !== null
+                      ? element.recurrence.range.numberOfOccurrences
+                      : "",
+                  recurrenceRangeType:
+                    element.recurrence !== null
+                      ? element.recurrence.range.type
+                      : "",
+                  recurrenceStartTime:
+                    element.recurrence !== null
+                      ? element.recurrence.range.startDate
+                      : "",
+                  recurrenceEndTime:
+                    element.recurrence !== null
+                      ? element.recurrence.range.endDate
+                      : "",
+                  recurrenceTimeZone:
+                    element.recurrence !== null
+                      ? element.recurrence.range.recurrenceTimeZone
+                      : "",
+                  recurrencePattern:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern
+                      : "",
+                  recurrencePatternType:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern.type
+                      : "",
+                });
+                console.log("This event is SeriesMaster >>>>>>>>>>>>>>>>>>>>");
+              } else {
+                lAllEventsData.push({
+                  // Id: element.id,
+                  id: element.id,
+                  // ID: element.id,
+                  title: element.subject,
+                  Description: element.bodyPreview,
+                  location: element.location.displayName,
+                  EventDate: new Date(startDate),
+                  EndDate: new Date(endDate),
+                  // color: "",
+                  // ownerInitial: "",
+                  // ownerInitial: element.organizer.emailAddress.name,
+                  // ownerPhoto: "#",
+                  // ownerEmail: element.organizer.emailAddress.address,
+                  ownerName: element.organizer.emailAddress.name,
+                  fAllDayEvent: element !== null ? element.isAllDay : "",
+                  attendes: element.attendees,
+                  attendeesID: element.attendeesID,
+                  attendessEmail: attendeesEmail,
+                  geolocation: element.locations.displayName,
+                  // Category: element.categories,
+                  Category: "Test",
+                  // Duration: 500,
+
+                  fRecurrence: element !== null ? element.recurrence : "",
+
+                  // Rpattern:
+                  //   element.recurrence !== undefined
+                  //     ? element.recurrence.pattern
+                  //     : "",
+                  Type: element.type,
+                  EventType: "1",
+                  iCalUId: element.iCalUId,
+                  UID: element.iCalUId,
+                  // RecurrenceID: element.RecurrenceID
+                  //   ? element.RecurrenceID
+                  //   : undefined,
+                  // MasterSeriesItemID: element.seriesMasterId,
+                  recurrenceInterval:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern.interval
+                      : "",
+                  recurrenceRangeNumber:
+                    element.recurrence !== null
+                      ? element.recurrence.range.numberOfOccurrences
+                      : "",
+                  recurrenceRangeType:
+                    element.recurrence !== null
+                      ? element.recurrence.range.type
+                      : "",
+                  recurrenceStartTime:
+                    element.recurrence !== null
+                      ? element.recurrence.range.startDate
+                      : "",
+                  recurrenceEndTime:
+                    element.recurrence !== null
+                      ? element.recurrence.range.endDate
+                      : "",
+                  recurrenceTimeZone:
+                    element.recurrence !== null
+                      ? element.recurrence.range.recurrenceTimeZone
+                      : "",
+                  recurrencePattern:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern
+                      : "",
+                  recurrencePatternType:
+                    element.recurrence !== null
+                      ? element.recurrence.pattern.type
+                      : "",
+                });
+              }
+              // lAllEventsData.push({
+              //   // Id: element.id,
+              //   id: element.id,
+              //   // ID: element.id,
+              //   title: element.subject,
+              //   Description: element.bodyPreview,
+              //   location: element.location.displayName,
+              //   EventDate: new Date(startDate),
+              //   EndDate: new Date(endDate),
+              //   // color: "",
+              //   // ownerInitial: "",
+              //   // ownerInitial: element.organizer.emailAddress.name,
+              //   // ownerPhoto: "#",
+              //   // ownerEmail: element.organizer.emailAddress.address,
+              //   ownerName: element.organizer.emailAddress.name,
+              //   fAllDayEvent: element !== null ? element.isAllDay : "",
+              //   attendes: element.attendees,
+              //   attendeesID: element.attendeesID,
+              //   attendessEmail: attendeesEmail,
+              //   geolocation: element.locations.displayName,
+              //   // Category: element.categories,
+              //   Category: "Test",
+              //   // Duration: 500,
+
+              //   fRecurrence: element !== null ? element.recurrence : "",
+
+              //   // Rpattern:
+              //   //   element.recurrence !== undefined
+              //   //     ? element.recurrence.pattern
+              //   //     : "",
+              //   Type: element.type,
+              //   EventType: "1",
+              //   iCalUId: element.iCalUId,
+              //   UID: element.iCalUId,
+              //   // RecurrenceID: element.RecurrenceID
+              //   //   ? element.RecurrenceID
+              //   //   : undefined,
+              //   // MasterSeriesItemID: element.seriesMasterId,
+              //   recurrenceInterval:
+              //     element.recurrence !== null
+              //       ? element.recurrence.pattern.interval
+              //       : "",
+              //   recurrenceRangeNumber:
+              //     element.recurrence !== null
+              //       ? element.recurrence.range.numberOfOccurrences
+              //       : "",
+              //   recurrenceRangeType:
+              //     element.recurrence !== null
+              //       ? element.recurrence.range.type
+              //       : "",
+              //   recurrenceStartTime:
+              //     element.recurrence !== null
+              //       ? element.recurrence.range.startDate
+              //       : "",
+              //   recurrenceEndTime:
+              //     element.recurrence !== null
+              //       ? element.recurrence.range.endDate
+              //       : "",
+              //   recurrenceTimeZone:
+              //     element.recurrence !== null
+              //       ? element.recurrence.range.recurrenceTimeZone
+              //       : "",
+              //   recurrencePattern:
+              //     element.recurrence !== null ? element.recurrence.pattern : "",
+              //   recurrencePatternType:
+              //     element.recurrence !== null
+              //       ? element.recurrence.pattern.type
+              //       : "",
+              // });
             });
 
             this.setState({ eventData: lAllEventsData });

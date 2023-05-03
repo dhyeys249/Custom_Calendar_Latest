@@ -3,10 +3,20 @@
   "solution": {
     "name": "react-calendar-client-side-solution",
     "id": "3a13208b-3874-4036-9262-4edd22e88187",
-    "version": "1.1.0.0",
+    "version": "1.2.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
-    "isDomainIsolated": false
+    "isDomainIsolated": false,
+    "webApiPermissionRequests": [
+      {
+        "resource": "Microsoft Graph",
+        "scope": "Calendars.ReadWrite"
+      },
+      {
+        "resource": "Microsoft Graph",
+        "scope": "Calendars.Read"
+      }
+    ]
   },
   "paths": {
     "zippedPackage": "solution/react-calendar.sppkg"
